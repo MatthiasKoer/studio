@@ -787,7 +787,10 @@ function openPlanSheet(i){
     <textarea class="txt" id="pm" rows="5">${esc((p.mobility||[]).join("\n"))}</textarea>
     <div class="tiny muted" style="margin-top:5px">Ein Punkt pro Zeile.</div>
 
-    <button class="btn danger" id="delplan" style="margin-top:26px">Plan löschen</button>
+    <button class="btn ghost" id="dupplan" style="margin-top:22px">Plan duplizieren</button>
+    <div class="tiny muted" style="margin-top:5px">Für ein zweites Studio — die Übungen können dabei ein Kürzel bekommen, damit die Gewichte getrennt bleiben.</div>
+
+    <button class="btn danger" id="delplan" style="margin-top:22px">Plan löschen</button>
   `, () => {
     const b = document.getElementById("sheetbody");
     b.querySelector("#pn").oninput = e => { p.name = e.target.value; save(); };
@@ -800,6 +803,35 @@ function openPlanSheet(i){
       p.exercises.push({ id: uid(), name: "Neue Übung", sets: 3, reps: 10, rest: 60 });
       save(); openExerciseSheet(p, p.exercises.length-1);
     };
+    b.querySelector("#dupplan").onclick = () => {
+      const suffix = prompt(
+        "Kürzel für die Übungen? Zum Beispiel „S53“.\n\n" +
+        "Es wird an jeden Übungsnamen angehängt, damit die App die Gewichte pro Studio getrennt merkt. " +
+        "Leer lassen, wenn die Namen gleich bleiben sollen.", "");
+      if(suffix === null) return;
+      const s = suffix.trim();
+      const copy = {
+        id: uid(),
+        name: p.name + (s ? " – " + s : " (Kopie)"),
+        subtitle: p.subtitle,
+        mobility: [...(p.mobility||[])],
+        exercises: (p.exercises||[]).map(e => ({
+          id: uid(),
+          name: s ? e.name + " " + s : e.name,
+          sets: e.sets, reps: e.reps, rest: e.rest
+        }))
+      };
+      if(s){
+        for(const e of p.exercises||[]){
+          const src = D.library[e.name];
+          if(src) D.library[e.name + " " + s] = { text: src.text, images: [...src.images] };
+        }
+      }
+      D.plans.push(copy); save();
+      sheetStack.pop();
+      openPlanSheet(D.plans.length - 1);
+    };
+
     b.querySelector("#delplan").onclick = () => {
       if(!confirm("Plan „" + p.name + "\u201c wirklich löschen?")) return;
       D.plans.splice(i,1); save(); closeSheet();
