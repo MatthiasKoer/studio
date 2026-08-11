@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Studio">
+<meta name="theme-color" content="#f2f2f7">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.png">
+<title>Studio</title>
+<style>
+:root{
+  --blue:#185FA5; --green:#3B6D11; --amber:#BA7517; --red:#A32D2D;
+  --page:#f2f2f7; --card:#ffffff; --fill:#e9e9ef;
+  --tx:#111113; --tx2:#6b6b72; --tx3:#9a9aa2; --line:#e0e0e6;
+  --safe-top:env(safe-area-inset-top); --safe-bot:env(safe-area-inset-bottom);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --blue:#5DA9F0; --green:#7CC44B; --amber:#EFA53B; --red:#F0797A;
+    --page:#000000; --card:#1c1c1e; --fill:#2c2c2e;
+    --tx:#ffffff; --tx2:#98989f; --tx3:#6b6b72; --line:#2f2f33;
+  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  font:400 17px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
+  background:var(--page); color:var(--tx);
+  padding-top:var(--safe-top);
+  overscroll-behavior-y:none;
+}
+button,input,select,textarea{font:inherit;color:inherit}
+button{background:none;border:0;padding:0;cursor:pointer}
+h1{font-size:30px;font-weight:600;letter-spacing:-.4px;margin:6px 0 14px}
+h2{font-size:20px;font-weight:600;margin:0}
+.wrap{padding:12px 16px 130px;max-width:640px;margin:0 auto}
+.card{background:var(--card);border-radius:14px;padding:14px}
+.card+.card{margin-top:12px}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.9px;text-transform:uppercase;color:var(--tx2)}
+.muted{color:var(--tx2)}
+.small{font-size:13px}
+.tiny{font-size:11px}
+.num{font-variant-numeric:tabular-nums}
+.row{display:flex;align-items:center;gap:10px}
+.between{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.grow{flex:1;min-width:0}
+.trunc{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+hr{border:0;border-top:1px solid var(--line);margin:12px 0}
+
+.btn{background:var(--blue);color:#fff;border-radius:11px;padding:12px;font-weight:600;font-size:16px;width:100%;text-align:center;display:block}
+.btn.ghost{background:var(--fill);color:var(--tx)}
+.btn.danger{background:var(--fill);color:var(--red)}
+.chip{background:var(--fill);border-radius:9px;padding:6px 11px;font-size:14px;font-weight:500;display:inline-block}
+.pill{background:var(--blue);color:#fff;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600}
+
+.field{background:var(--fill);border:1.5px solid transparent;border-radius:10px;padding:9px 8px;text-align:right;font-size:17px;font-weight:500;font-variant-numeric:tabular-nums;width:100%;-webkit-appearance:none;appearance:none}
+.field:focus{outline:none;border-color:var(--blue);background:var(--card)}
+.txt{background:var(--fill);border:1.5px solid transparent;border-radius:10px;padding:11px;width:100%;font-size:16px;-webkit-appearance:none;appearance:none}
+.txt:focus{outline:none;border-color:var(--blue);background:var(--card)}
+
+.setrow{display:grid;grid-template-columns:18px 1fr 1fr 44px;align-items:center;gap:8px;padding:5px 0}
+.setrow.done{opacity:.55}
+.tick{width:32px;height:32px;border-radius:50%;border:2px solid var(--tx3);display:flex;align-items:center;justify-content:center;margin-left:auto}
+.tick.on{background:var(--green);border-color:var(--green)}
+.tick svg{width:17px;height:17px;stroke:#fff;stroke-width:3.4;fill:none;display:none}
+.tick.on svg{display:block}
+.unit{font-size:11px;color:var(--tx2);font-weight:400}
+
+.tabbar{position:fixed;left:0;right:0;bottom:0;display:flex;background:color-mix(in srgb,var(--card) 88%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-top:1px solid var(--line);padding-bottom:var(--safe-bot);z-index:40}
+.tabbar button{flex:1;padding:8px 2px 6px;color:var(--tx3);font-size:10px;font-weight:500;display:flex;flex-direction:column;align-items:center;gap:3px}
+.tabbar button.on{color:var(--blue)}
+.tabbar svg{width:24px;height:24px;stroke:currentColor;stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round}
+
+#restbar{position:fixed;left:0;right:0;bottom:calc(50px + var(--safe-bot));background:color-mix(in srgb,var(--card) 94%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-top:1px solid var(--line);padding:10px 16px;z-index:39;display:none}
+#restbar.show{display:block}
+#restclock{font-size:30px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1;color:var(--blue)}
+#restbar.over #restclock{color:var(--green)}
+.bar{height:4px;background:var(--line);border-radius:2px;margin-top:9px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--blue);border-radius:2px;transition:width .25s linear}
+#restbar.over .bar i{background:var(--green)}
+
+.sheet{position:fixed;inset:0;background:var(--page);z-index:60;display:none;flex-direction:column;padding-top:var(--safe-top)}
+.sheet.show{display:flex}
+.sheethead{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line);gap:12px}
+.sheethead b{font-size:16px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sheethead button{color:var(--blue);font-size:16px;font-weight:500;flex:none}
+.sheetbody{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 16px calc(40px + var(--safe-bot))}
+
+.thumbs{display:flex;gap:8px;overflow-x:auto;padding:2px 0}
+.thumbs img{height:64px;width:64px;object-fit:cover;border-radius:9px;flex:none}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:9px}
+.grid img{width:100%;height:96px;object-fit:cover;border-radius:10px}
+.imgbox{position:relative}
+.imgbox .del{position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,.62);color:#fff;font-size:15px;line-height:24px;text-align:center}
+
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px}
+.stat{background:var(--card);border-radius:12px;padding:11px}
+.stat b{display:block;font-size:21px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.2}
+.bars{display:flex;align-items:flex-end;gap:5px;height:110px;margin-top:12px}
+.bars i{flex:1;background:var(--blue);border-radius:3px;min-height:2px;display:block}
+.empty{text-align:center;padding:56px 24px;color:var(--tx2)}
+.empty b{display:block;color:var(--tx);font-size:17px;margin-bottom:6px}
+.listitem{padding:12px 0;border-bottom:1px solid var(--line)}
+.listitem:last-child{border-bottom:0}
+select.txt{background-image:none}
+label.lbl{display:block;font-size:13px;color:var(--tx2);margin:14px 0 5px}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<div id="restbar">
+  <div class="row">
+    <span id="restclock">0:00</span>
+    <div class="grow">
+      <div style="font-size:14px;font-weight:600" id="resttitle">Pause</div>
+      <div class="tiny muted trunc" id="restlabel"></div>
+    </div>
+    <button class="chip" id="restplus">+30</button>
+    <button class="chip" id="reststop" style="background:var(--blue);color:#fff">Stopp</button>
+  </div>
+  <div class="bar"><i id="restfill" style="width:0%"></i></div>
+</div>
+
+<nav class="tabbar" id="tabbar"></nav>
+
+<div class="sheet" id="sheet">
+  <div class="sheethead">
+    <button id="sheetclose">Fertig</button>
+    <b id="sheettitle"></b>
+    <span style="width:44px"></span>
+  </div>
+  <div class="sheetbody" id="sheetbody"></div>
+</div>
+
+<input type="file" id="filepick" accept="image/*" multiple class="hidden">
+<input type="file" id="jsonpick" accept="application/json,.json" class="hidden">
+
+<script>
+"use strict";
+
+/* ---------- Speicher ---------- */
+
+const KEY = "studio.data.v1";
+let D = null;
+
+const DEFAULTS = () => ({
+  plans: [
+    { id: uid(), name: "Einheit A", subtitle: "Hintere Kette + Rumpf",
+      mobility: ["Aufwärmen: 8–10 Min Stepper, Laufband oder Rad",
+                 "Thoraxrotation sitzend – 10× pro Seite",
+                 "Hüftbeuger-Dehnung rechts – 60 Sek",
+                 "SCM-Dehnung links – 60 Sek"],
+      exercises: [
+        { id: uid(), name: "Rumänisches Kreuzheben Langhantel", sets: 3, reps: 10, rest: 90 },
+        { id: uid(), name: "Einbeiniges Kreuzheben rechts", sets: 2, reps: 10, rest: 90 },
+        { id: uid(), name: "Kabelzug Rudern beidarmig", sets: 3, reps: 12, rest: 60 },
+        { id: uid(), name: "Lat Pulldown", sets: 3, reps: 10, rest: 60 },
+        { id: uid(), name: "Bauchmaschine", sets: 3, reps: 15, rest: 45 },
+        { id: uid(), name: "Rückenstreckmaschine", sets: 3, reps: 12, rest: 45 },
+        { id: uid(), name: "Pilates-Stuhl hintere Kette", sets: 2, reps: 8, rest: 60 }
+      ]},
+    { id: uid(), name: "Einheit B", subtitle: "Oberkörper + Schulter",
+      mobility: ["Aufwärmen: 8–10 Min Stepper, Laufband oder Rad",
+                 "Schulterkreisen groß – 10×",
+                 "Brustöffnung an der Wand – 60 Sek",
+                 "SCM-Dehnung links – 60 Sek"],
+      exercises: [
+        { id: uid(), name: "Kabelzug Rudern einarmig links", sets: 3, reps: 12, rest: 60 },
+        { id: uid(), name: "Kabelzug Rudern einarmig rechts", sets: 3, reps: 10, rest: 60 },
+        { id: uid(), name: "Schulterdrücken Kurzhantel einarmig rechts", sets: 2, reps: 10, rest: 90 },
+        { id: uid(), name: "Seitheben Kabelzug beidseits", sets: 3, reps: 12, rest: 45 },
+        { id: uid(), name: "Bizeps Kurzhantel", sets: 2, reps: 12, rest: 45 },
+        { id: uid(), name: "Trizeps Kabelzug", sets: 2, reps: 12, rest: 45 },
+        { id: uid(), name: "Bauchmaschine", sets: 3, reps: 15, rest: 45 }
+      ]}
+  ],
+  history: [],
+  active: null,
+  library: {}
+});
+
+function uid(){ return Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4); }
+
+function load(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    D = raw ? JSON.parse(raw) : DEFAULTS();
+  }catch(e){ D = DEFAULTS(); }
+  if(!D.plans) D.plans = [];
+  if(!D.history) D.history = [];
+  if(!D.library) D.library = {};
+}
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(D)); }
+  catch(e){ alert("Speichern fehlgeschlagen. Vermutlich ist der Speicher voll — exportiere deine Daten unter Pläne."); }
+}
+
+/* ---------- Bilder in IndexedDB ---------- */
+
+let idb = null;
+function openDB(){
+  return new Promise(res => {
+    if(idb) return res(idb);
+    const rq = indexedDB.open("studio-images", 1);
+    rq.onupgradeneeded = () => rq.result.createObjectStore("img");
+    rq.onsuccess = () => { idb = rq.result; res(idb); };
+    rq.onerror = () => res(null);
+  });
+}
+async function imgPut(id, dataURL){
+  const db = await openDB(); if(!db) return;
+  return new Promise(res => {
+    const tx = db.transaction("img","readwrite");
+    tx.objectStore("img").put(dataURL, id);
+    tx.oncomplete = res; tx.onerror = res;
+  });
+}
+async function imgGet(id){
+  const db = await openDB(); if(!db) return null;
+  return new Promise(res => {
+    const rq = db.transaction("img","readonly").objectStore("img").get(id);
+    rq.onsuccess = () => res(rq.result || null);
+    rq.onerror = () => res(null);
+  });
+}
+async function imgDel(id){
+  const db = await openDB(); if(!db) return;
+  const tx = db.transaction("img","readwrite");
+  tx.objectStore("img").delete(id);
+}
+async function imgAll(){
+  const db = await openDB(); if(!db) return {};
+  return new Promise(res => {
+    const out = {};
+    const st = db.transaction("img","readonly").objectStore("img");
+    const rq = st.openCursor();
+    rq.onsuccess = () => {
+      const c = rq.result;
+      if(!c) return res(out);
+      out[c.key] = c.value; c.continue();
+    };
+    rq.onerror = () => res(out);
+  });
+}
+
+function shrink(file, max){
+  return new Promise(res => {
+    const fr = new FileReader();
+    fr.onload = () => {
+      const im = new Image();
+      im.onload = () => {
+        let {width:w, height:h} = im;
+        const longest = Math.max(w,h);
+        if(longest > max){ const f = max/longest; w = Math.round(w*f); h = Math.round(h*f); }
+        const c = document.createElement("canvas");
+        c.width = w; c.height = h;
+        c.getContext("2d").drawImage(im, 0, 0, w, h);
+        res(c.toDataURL("image/jpeg", 0.78));
+      };
+      im.onerror = () => res(null);
+      im.src = fr.result;
+    };
+    fr.onerror = () => res(null);
+    fr.readAsDataURL(file);
+  });
+}
+
+/* ---------- Formate ---------- */
+
+const de = n => String(n).replace(".", ",");
+function kg(v){
+  const r = Math.round(v*100)/100;
+  return (r === Math.round(r) ? r : de(r.toFixed(1))) + " kg";
+}
+function vol(v){
+  if(v >= 1000) return de((v/1000).toFixed(1)) + " t";
+  return Math.round(v) + " kg";
+}
+function dur(ms){
+  const m = Math.max(0, Math.floor(ms/60000));
+  return m < 60 ? m + " Min" : Math.floor(m/60) + " Std " + (m%60) + " Min";
+}
+function clock(s){
+  s = Math.max(0, s);
+  return Math.floor(s/60) + ":" + String(s%60).padStart(2,"0");
+}
+const DAYS = ["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
+const MON = ["Jan","Feb","März","Apr","Mai","Juni","Juli","Aug","Sept","Okt","Nov","Dez"];
+const MONL = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+function dayLong(ts){ const d = new Date(ts); return DAYS[d.getDay()] + ", " + d.getDate() + ". " + MONL[d.getMonth()]; }
+function dayShort(ts){ const d = new Date(ts); return d.getDate() + ". " + MON[d.getMonth()]; }
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+/* ---------- Auswertung ---------- */
+
+const doneSets = ex => (ex.sets || []).filter(s => s.done);
+const exVolume = ex => doneSets(ex).reduce((a,s) => a + (s.w||0) * (s.r||0), 0);
+const wkVolume = w => (w.exercises||[]).reduce((a,e) => a + exVolume(e), 0);
+const wkDone = w => (w.exercises||[]).reduce((a,e) => a + doneSets(e).length, 0);
+const wkPlanned = w => (w.exercises||[]).reduce((a,e) => a + (e.sets||[]).length, 0);
+function e1rm(ex){
+  const v = doneSets(ex).filter(s => s.w > 0 && s.r > 0).map(s => s.w * (1 + s.r/30));
+  return v.length ? Math.max.apply(null, v) : 0;
+}
+function lastLog(name){
+  const h = D.history.slice().sort((a,b) => b.start - a.start);
+  for(const w of h){
+    const m = (w.exercises||[]).find(e => e.name === name && doneSets(e).length);
+    if(m) return { ex: m, start: w.start };
+  }
+  return null;
+}
+function detail(name){ return D.library[name] || { text:"", images:[] }; }
+function setDetail(name, det){
+  if(!det.text.trim() && !det.images.length) delete D.library[name];
+  else D.library[name] = det;
+  save();
+}
+
+/* ---------- Pausen-Timer ---------- */
+
+const Rest = {
+  end: 0, total: 0, running: false, label: "", tick: null, wake: null,
+  async start(sec, label){
+    if(!sec) return;
+    this.stop(true);
+    this.total = sec; this.label = label || ""; this.running = true;
+    this.end = Date.now() + sec*1000;
+    this.tick = setInterval(() => this.render(), 250);
+    this.render();
+    try{ if("wakeLock" in navigator) this.wake = await navigator.wakeLock.request("screen"); }catch(e){}
+    if(navigator.vibrate) navigator.vibrate(12);
+  },
+  add(s){ if(!this.running) return; this.end += s*1000; this.total += s; this.render(); },
+  stop(quiet){
+    this.running = false;
+    clearInterval(this.tick); this.tick = null;
+    if(this.wake){ try{ this.wake.release(); }catch(e){} this.wake = null; }
+    if(!quiet){ document.getElementById("restbar").classList.remove("show","over"); }
+  },
+  render(){
+    const bar = document.getElementById("restbar");
+    const left = Math.ceil((this.end - Date.now())/1000);
+    bar.classList.add("show");
+    if(left <= 0){
+      if(this.running){
+        this.running = false;
+        clearInterval(this.tick); this.tick = null;
+        if(this.wake){ try{ this.wake.release(); }catch(e){} this.wake = null; }
+        bar.classList.add("over");
+        document.getElementById("resttitle").textContent = "Pause vorbei";
+        document.getElementById("reststop").textContent = "OK";
+        document.getElementById("restplus").classList.add("hidden");
+        beep();
+        if(navigator.vibrate) navigator.vibrate([180,90,180]);
+      }
+      document.getElementById("restclock").textContent = "0:00";
+      document.getElementById("restfill").style.width = "100%";
+      return;
+    }
+    bar.classList.remove("over");
+    document.getElementById("resttitle").textContent = "Pause";
+    document.getElementById("reststop").textContent = "Stopp";
+    document.getElementById("restplus").classList.remove("hidden");
+    document.getElementById("restclock").textContent = clock(left);
+    document.getElementById("restlabel").textContent = this.label;
+    document.getElementById("restfill").style.width = Math.min(100, (1 - left/this.total)*100) + "%";
+  }
+};
+
+let actx = null;
+function beep(){
+  try{
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    if(actx.state === "suspended") actx.resume();
+    [0, 0.22, 0.44].forEach(off => {
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type = "sine"; o.frequency.value = 880;
+      g.gain.setValueAtTime(0.0001, actx.currentTime + off);
+      g.gain.exponentialRampToValueAtTime(0.35, actx.currentTime + off + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + off + 0.17);
+      o.connect(g); g.connect(actx.destination);
+      o.start(actx.currentTime + off); o.stop(actx.currentTime + off + 0.2);
+    });
+  }catch(e){}
+}
+
+document.getElementById("restplus").onclick = () => Rest.add(30);
+document.getElementById("reststop").onclick = () => Rest.stop();
+document.addEventListener("visibilitychange", () => { if(!document.hidden && Rest.running) Rest.render(); });
+
+/* ---------- Blätter ---------- */
+
+let sheetStack = [];
+function openSheet(title, html, onMount){
+  sheetStack.push({title, html, onMount});
+  paintSheet();
+}
+function paintSheet(){
+  const s = sheetStack[sheetStack.length-1];
+  const el = document.getElementById("sheet");
+  if(!s){ el.classList.remove("show"); return; }
+  document.getElementById("sheettitle").textContent = s.title;
+  document.getElementById("sheetbody").innerHTML = s.html;
+  document.getElementById("sheetbody").scrollTop = 0;
+  el.classList.add("show");
+  if(s.onMount) s.onMount();
+}
+function closeSheet(){
+  sheetStack.pop();
+  if(!sheetStack.length) document.getElementById("sheet").classList.remove("show");
+  else paintSheet();
+  render();
+}
+document.getElementById("sheetclose").onclick = closeSheet;
+
+/* ---------- Navigation ---------- */
+
+let tab = "train";
+const TABS = [
+  { id:"train", label:"Training", icon:'<path d="M4 9v6M20 9v6M7 6v12M17 6v12M7 12h10"/>' },
+  { id:"hist",  label:"Verlauf",  icon:'<path d="M4 6h16M4 12h16M4 18h10"/>' },
+  { id:"stats", label:"Statistik",icon:'<path d="M4 19V5M4 19h16M8 15l3-4 3 3 5-7"/>' },
+  { id:"plans", label:"Pläne",    icon:'<path d="M4 7h16v13H4zM7 4h10"/>' }
+];
+function paintTabs(){
+  document.getElementById("tabbar").innerHTML = TABS.map(t =>
+    `<button data-tab="${t.id}" class="${tab===t.id?"on":""}">
+       <svg viewBox="0 0 24 24">${t.icon}</svg>${t.label}</button>`).join("");
+  document.querySelectorAll("#tabbar button").forEach(b =>
+    b.onclick = () => { tab = b.dataset.tab; render(); });
+}
+
+/* ---------- Rendern ---------- */
+
+function render(){
+  paintTabs();
+  const app = document.getElementById("app");
+  if(tab === "train") app.innerHTML = D.active ? viewWorkout() : viewPicker();
+  else if(tab === "hist") app.innerHTML = viewHistory();
+  else if(tab === "stats") app.innerHTML = viewStats();
+  else app.innerHTML = viewPlans();
+  bind();
+  if(D.active) hydrateThumbs();
+}
+
+/* --- Auswahl --- */
+
+function suggestedPlan(){
+  if(!D.plans.length) return null;
+  let best = D.plans[0], bestAt = Infinity;
+  for(const p of D.plans){
+    const w = D.history.find(x => x.planId === p.id);
+    const at = w ? w.start : 0;
+    if(at < bestAt){ bestAt = at; best = p; }
+  }
+  return best;
+}
+function daysSince(){
+  if(!D.history.length) return null;
+  const last = Math.max.apply(null, D.history.map(w => w.start));
+  return Math.floor((Date.now() - last)/86400000);
+}
+
+function viewPicker(){
+  const sug = suggestedPlan();
+  const ds = daysSince();
+  const hint = ds === null ? "Noch kein Training gespeichert."
+    : ds === 0 ? "Heute schon trainiert."
+    : ds === 1 ? "Letztes Training gestern."
+    : "Letztes Training vor " + ds + " Tagen.";
+
+  return `<div class="wrap">
+    <h1>Training</h1>
+    <p class="small muted" style="margin:-8px 0 14px">${hint}</p>
+    ${D.plans.map(p => `
+      <div class="card">
+        <div class="between">
+          <div class="grow">
+            <h2>${esc(p.name)}</h2>
+            <div class="small muted">${esc(p.subtitle||"")}</div>
+          </div>
+          ${sug && sug.id===p.id ? '<span class="pill">dran</span>' : ""}
+        </div>
+        <hr>
+        ${p.exercises.map(e => `<div class="between small" style="padding:2px 0">
+            <span class="trunc">${esc(e.name)}</span>
+            <span class="muted num">${e.sets} × ${e.reps}</span></div>`).join("")}
+        ${p.mobility && p.mobility.length ? `
+        <details style="margin-top:10px">
+          <summary class="eyebrow" style="cursor:pointer">Aufwärmen &amp; Mobilität</summary>
+          <div class="small muted" style="margin-top:6px">
+            ${p.mobility.map(m => "· " + esc(m)).join("<br>")}
+          </div>
+        </details>` : ""}
+        <button class="btn" data-start="${p.id}" style="margin-top:12px">Starten</button>
+      </div>`).join("")}
+    <button class="btn ghost" data-freestart style="margin-top:12px">Freies Training</button>
+  </div>`;
+}
+
+/* --- Training --- */
+
+function startWorkout(plan){
+  const w = { id: uid(), planId: plan ? plan.id : null,
+    title: plan ? plan.name + " – " + plan.subtitle : "Freies Training",
+    start: Date.now(), end: null, exercises: [] };
+  if(plan){
+    w.exercises = plan.exercises.map(pe => {
+      const prev = lastLog(pe.name);
+      const ps = prev ? doneSets(prev.ex) : [];
+      return { name: pe.name, target: pe.sets, reps: pe.reps, rest: pe.rest,
+        sets: Array.from({length: pe.sets}, (_,i) => ({
+          w: (ps[i] || ps[ps.length-1] || {}).w || 0, r: pe.reps, done: false })) };
+    });
+  }
+  D.active = w; save(); render();
+}
+
+function viewWorkout(){
+  const w = D.active;
+  return `<div class="wrap">
+    <div class="between" style="margin:2px 0 12px">
+      <button style="color:var(--red);font-size:15px" data-discard>Verwerfen</button>
+      <b style="font-size:15px" class="trunc">${esc(w.title)}</b>
+      <button style="color:var(--blue);font-size:15px;font-weight:600" data-finish>Beenden</button>
+    </div>
+
+    <div class="card row" style="gap:16px">
+      <div><b class="num" style="font-size:19px">${dur(Date.now() - w.start)}</b>
+           <div class="tiny muted">Dauer</div></div>
+      <div><b class="num" style="font-size:19px">${wkDone(w)}/${wkPlanned(w)}</b>
+           <div class="tiny muted">Sätze</div></div>
+      <div><b class="num" style="font-size:19px">${vol(wkVolume(w))}</b>
+           <div class="tiny muted">Volumen</div></div>
+    </div>
+
+    ${w.exercises.map((ex,xi) => exerciseCard(ex, xi)).join("")}
+
+    <button class="btn ghost" data-addex style="margin-top:12px">Übung hinzufügen</button>
+  </div>`;
+}
+
+function exerciseCard(ex, xi){
+  const prev = lastLog(ex.name);
+  const det = detail(ex.name);
+  return `<div class="card">
+    <div class="between">
+      <b class="grow trunc" style="font-size:17px;font-weight:600">${esc(ex.name)}</b>
+      <span class="muted small num">${ex.target||ex.sets.length} × ${ex.reps}</span>
+      <button data-info="${esc(ex.name)}" style="color:${det.text||det.images.length ? "var(--blue)":"var(--tx3)"};font-size:20px;padding:0 2px">ⓘ</button>
+    </div>
+
+    ${det.text ? `<div class="small muted" style="margin-top:7px;white-space:pre-wrap">${esc(det.text)}</div>` : ""}
+    ${det.images.length ? `<div class="thumbs" data-thumbs="${esc(ex.name)}" style="margin-top:8px"></div>` : ""}
+
+    ${prev ? `<div style="margin-top:9px">
+        <div class="eyebrow">Letztes Mal · ${dayShort(prev.start)}</div>
+        <div class="small muted num">${doneSets(prev.ex).map(s => kg(s.w)+" × "+s.r).join("&nbsp;&nbsp; ")}</div>
+      </div>` : ""}
+
+    <div style="margin-top:9px">
+      ${ex.sets.map((s,si) => `
+        <div class="setrow ${s.done?"done":""}">
+          <span class="tiny muted">${si+1}</span>
+          <div style="position:relative">
+            <input class="field" type="text" inputmode="decimal" value="${s.w||""}" placeholder="0"
+                   data-w="${xi}.${si}"><span class="unit" style="position:absolute;right:9px;top:12px">kg</span>
+          </div>
+          <div style="position:relative">
+            <input class="field" type="text" inputmode="numeric" value="${s.r||""}" placeholder="0"
+                   data-r="${xi}.${si}"><span class="unit" style="position:absolute;right:9px;top:12px">Wdh</span>
+          </div>
+          <button class="tick ${s.done?"on":""}" data-tick="${xi}.${si}">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          </button>
+        </div>`).join("")}
+    </div>
+
+    <div class="between" style="margin-top:10px">
+      <button class="chip" data-addset="${xi}">+ Satz</button>
+      <span class="tiny muted">${ex.rest} Sek Pause</span>
+    </div>
+  </div>`;
+}
+
+async function hydrateThumbs(){
+  for(const box of document.querySelectorAll("[data-thumbs]")){
+    const det = detail(box.dataset.thumbs);
+    box.innerHTML = "";
+    for(const id of det.images){
+      const src = await imgGet(id);
+      if(!src) continue;
+      const im = new Image(); im.src = src;
+      im.onclick = () => openDetailSheet(box.dataset.thumbs);
+      box.appendChild(im);
+    }
+  }
+}
+
+function finishWorkout(){
+  const w = D.active;
+  w.end = Date.now();
+  w.exercises = w.exercises
+    .map(e => ({...e, sets: doneSets(e)}))
+    .filter(e => e.sets.length);
+  if(w.exercises.length){ D.history.unshift(w); D.history.sort((a,b) => b.start - a.start); }
+  D.active = null; Rest.stop(); save(); render();
+}
+
+/* --- Verlauf --- */
+
+function viewHistory(){
+  if(!D.history.length) return `<div class="wrap"><h1>Verlauf</h1>
+    <div class="empty"><b>Noch kein Training gespeichert</b>
+    Nach der ersten abgeschlossenen Einheit steht hier jedes Training mit allen Sätzen.</div></div>`;
+
+  return `<div class="wrap"><h1>Verlauf</h1><div class="card">
+    ${D.history.map((w,i) => `<div class="listitem" data-hist="${i}">
+      <b style="font-size:16px;font-weight:600">${esc(w.title)}</b>
+      <div class="small muted">${dayLong(w.start)}</div>
+      <div class="tiny muted num" style="margin-top:3px">
+        ${wkDone(w)} Sätze &nbsp;·&nbsp; ${vol(wkVolume(w))} &nbsp;·&nbsp; ${dur((w.end||w.start) - w.start)}
+      </div></div>`).join("")}
+  </div></div>`;
+}
+
+function openHistSheet(i){
+  const w = D.history[i];
+  openSheet(dayShort(w.start), `
+    <div class="stats">
+      <div class="stat"><b>${wkDone(w)}</b><span class="tiny muted">Sätze</span></div>
+      <div class="stat"><b>${vol(wkVolume(w))}</b><span class="tiny muted">Volumen</span></div>
+      <div class="stat"><b>${dur((w.end||w.start)-w.start)}</b><span class="tiny muted">Dauer</span></div>
+    </div>
+    <div style="height:12px"></div>
+    ${w.exercises.map(ex => `<div class="card">
+      <b style="font-size:16px;font-weight:600">${esc(ex.name)}</b>
+      <div style="margin-top:7px">
+        ${doneSets(ex).map((s,i) => `<div class="row small num" style="padding:2px 0">
+          <span class="muted" style="width:16px">${i+1}</span>
+          <span>${kg(s.w)}</span><span class="muted">×</span><span>${s.r}</span></div>`).join("")}
+      </div>
+      ${e1rm(ex) ? `<div class="tiny muted" style="margin-top:6px">Bester Satz ≈ ${kg(e1rm(ex))} 1RM</div>` : ""}
+    </div>`).join("")}
+    <button class="btn danger" data-delhist="${i}" style="margin-top:16px">Diese Einheit löschen</button>
+  `, () => {
+    document.querySelector("[data-delhist]").onclick = () => {
+      if(!confirm("Diese Einheit wirklich löschen?")) return;
+      D.history.splice(i,1); save(); closeSheet();
+    };
+  });
+}
+
+/* --- Statistik --- */
+
+function weeklyVolume(n){
+  const out = [];
+  const now = new Date();
+  const monday = new Date(now); 
+  const wd = (now.getDay() + 6) % 7;
+  monday.setHours(0,0,0,0); monday.setDate(monday.getDate() - wd);
+  for(let k = n-1; k >= 0; k--){
+    const s = new Date(monday); s.setDate(s.getDate() - k*7);
+    const e = new Date(s); e.setDate(e.getDate() + 7);
+    const ws = D.history.filter(w => w.start >= s.getTime() && w.start < e.getTime());
+    out.push({ start: s.getTime(), volume: ws.reduce((a,w) => a + wkVolume(w), 0) });
+  }
+  return out;
+}
+
+let statPick = "";
+function viewStats(){
+  if(!D.history.length) return `<div class="wrap"><h1>Statistik</h1>
+    <div class="empty"><b>Noch keine Daten</b>
+    Sobald zwei, drei Einheiten gespeichert sind, wird die Entwicklung hier sichtbar.</div></div>`;
+
+  const cutoff = Date.now() - 30*86400000;
+  const recent = D.history.filter(w => w.start >= cutoff);
+  const weeks = weeklyVolume(8);
+  const peak = Math.max(1, ...weeks.map(w => w.volume));
+  const names = [...new Set(D.history.flatMap(w => w.exercises.map(e => e.name)))].sort();
+  if(!names.includes(statPick)) statPick = names[0] || "";
+
+  const pts = D.history
+    .filter(w => w.exercises.some(e => e.name === statPick && e1rm(e) > 0))
+    .map(w => ({ t: w.start, v: e1rm(w.exercises.find(e => e.name === statPick)) }))
+    .sort((a,b) => a.t - b.t);
+
+  let chart = `<p class="small muted">Mindestens zwei Einheiten mit dieser Übung nötig, damit eine Kurve entsteht.</p>`;
+  if(pts.length >= 2){
+    const lo = Math.min(...pts.map(p=>p.v)), hi = Math.max(...pts.map(p=>p.v));
+    const span = (hi - lo) || 1;
+    const W = 280, H = 90;
+    const xy = pts.map((p,i) => [
+      10 + i*(W-20)/(pts.length-1),
+      H - 12 - ((p.v - lo)/span)*(H-30)
+    ]);
+    const change = Math.round((pts[pts.length-1].v - pts[0].v)/pts[0].v*100);
+    chart = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:96px;margin-top:8px">
+        <polyline points="${xy.map(p=>p.join(",")).join(" ")}" fill="none"
+          stroke="var(--amber)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        ${xy.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="var(--amber)"/>`).join("")}
+      </svg>
+      <div class="small num" style="font-weight:600;color:${change>=0?"var(--green)":"var(--tx2)"}">
+        ${change>=0?"+":""}${change} % seit ${dayShort(pts[0].t)}</div>
+      <div class="tiny muted" style="margin-top:4px">Geschätztes Einwiederholungsmaximum nach Epley — macht Sätze mit unterschiedlichen Wiederholungszahlen vergleichbar.</div>`;
+  }
+
+  return `<div class="wrap"><h1>Statistik</h1>
+    <div class="stats">
+      <div class="stat"><b>${recent.length}</b><span class="tiny muted">Einheiten, 30 Tage</span></div>
+      <div class="stat"><b>${vol(recent.reduce((a,w)=>a+wkVolume(w),0))}</b><span class="tiny muted">Volumen, 30 Tage</span></div>
+      <div class="stat"><b>${daysSince() ?? "–"}</b><span class="tiny muted">Tage seit zuletzt</span></div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <div class="eyebrow">Volumen pro Woche</div>
+      <div class="bars">${weeks.map(w =>
+        `<i style="height:${Math.max(2, w.volume/peak*100)}%"></i>`).join("")}</div>
+      <div class="between tiny muted" style="margin-top:6px">
+        <span>${dayShort(weeks[0].start)}</span><span>${dayShort(weeks[weeks.length-1].start)}</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">Entwicklung einer Übung</div>
+      <select class="txt" id="statpick" style="margin-top:8px">
+        ${names.map(n => `<option ${n===statPick?"selected":""}>${esc(n)}</option>`).join("")}
+      </select>
+      ${chart}
+    </div>
+  </div>`;
+}
+
+/* --- Pläne --- */
+
+function viewPlans(){
+  return `<div class="wrap"><h1>Pläne</h1>
+    <div class="card">
+      ${D.plans.map((p,i) => `<div class="listitem between" data-plan="${i}">
+        <div class="grow"><b style="font-size:16px;font-weight:600">${esc(p.name)}</b>
+          <div class="small muted">${esc(p.subtitle||"")} · ${p.exercises.length} Übungen</div></div>
+        <span class="muted">›</span></div>`).join("")}
+    </div>
+    <button class="btn ghost" data-newplan style="margin-top:12px">Plan hinzufügen</button>
+
+    <div class="card" style="margin-top:22px">
+      <div class="eyebrow">Daten sichern</div>
+      <p class="small muted" style="margin:7px 0 11px">
+        Die App speichert alles auf diesem iPhone. Sichere den Verlauf ab und zu als Datei —
+        etwa einmal im Monat.</p>
+      <button class="btn ghost" data-export>Alles exportieren</button>
+      <button class="btn ghost" data-import style="margin-top:9px">Aus Datei wiederherstellen</button>
+    </div>
+  </div>`;
+}
+
+function openPlanSheet(i){
+  const p = D.plans[i];
+  openSheet(p.name, `
+    <label class="lbl">Name</label>
+    <input class="txt" id="pn" value="${esc(p.name)}">
+    <label class="lbl">Untertitel</label>
+    <input class="txt" id="ps" value="${esc(p.subtitle||"")}">
+
+    <label class="lbl">Übungen</label>
+    <div class="card" style="padding:4px 14px">
+      ${p.exercises.map((e,j) => `<div class="listitem between" data-ex="${j}">
+        <span class="grow trunc">${esc(e.name)}</span>
+        <span class="muted small num">${e.sets} × ${e.reps}</span>
+        <span class="muted">›</span></div>`).join("") || '<div class="listitem muted small">Noch keine Übung.</div>'}
+    </div>
+    <button class="btn ghost" id="addex" style="margin-top:10px">Übung hinzufügen</button>
+
+    <label class="lbl">Aufwärmen &amp; Mobilität</label>
+    <textarea class="txt" id="pm" rows="5">${esc((p.mobility||[]).join("\n"))}</textarea>
+    <div class="tiny muted" style="margin-top:5px">Ein Punkt pro Zeile.</div>
+
+    <button class="btn danger" id="delplan" style="margin-top:26px">Plan löschen</button>
+  `, () => {
+    const b = document.getElementById("sheetbody");
+    b.querySelector("#pn").oninput = e => { p.name = e.target.value; save(); };
+    b.querySelector("#ps").oninput = e => { p.subtitle = e.target.value; save(); };
+    b.querySelector("#pm").oninput = e => {
+      p.mobility = e.target.value.split("\n").map(s => s.trim()).filter(Boolean); save(); };
+    b.querySelectorAll("[data-ex]").forEach(el =>
+      el.onclick = () => openExerciseSheet(p, +el.dataset.ex));
+    b.querySelector("#addex").onclick = () => {
+      p.exercises.push({ id: uid(), name: "Neue Übung", sets: 3, reps: 10, rest: 60 });
+      save(); openExerciseSheet(p, p.exercises.length-1);
+    };
+    b.querySelector("#delplan").onclick = () => {
+      if(!confirm("Plan „" + p.name + "\u201c wirklich löschen?")) return;
+      D.plans.splice(i,1); save(); closeSheet();
+    };
+  });
+}
+
+function openExerciseSheet(plan, j){
+  const e = plan.exercises[j];
+  const before = e.name;
+  openSheet("Übung", `
+    <label class="lbl">Name</label>
+    <input class="txt" id="en" value="${esc(e.name)}">
+
+    <button class="btn ghost" id="opendet" style="margin-top:14px">Beschreibung &amp; Bilder</button>
+
+    <label class="lbl">Sätze</label>
+    <input class="txt" id="es" type="number" inputmode="numeric" value="${e.sets}">
+    <label class="lbl">Wiederholungen</label>
+    <input class="txt" id="er" type="number" inputmode="numeric" value="${e.reps}">
+    <label class="lbl">Pause in Sekunden</label>
+    <input class="txt" id="ep" type="number" inputmode="numeric" step="15" value="${e.rest}">
+
+    <button class="btn danger" id="delex" style="margin-top:26px">Übung entfernen</button>
+  `, () => {
+    const b = document.getElementById("sheetbody");
+    b.querySelector("#en").oninput = ev => {
+      const now = ev.target.value;
+      if(before !== now && D.library[before]){ D.library[now] = D.library[before]; delete D.library[before]; }
+      e.name = now; save();
+    };
+    b.querySelector("#es").oninput = ev => { e.sets = Math.max(1, +ev.target.value||1); save(); };
+    b.querySelector("#er").oninput = ev => { e.reps = Math.max(1, +ev.target.value||1); save(); };
+    b.querySelector("#ep").oninput = ev => { e.rest = Math.max(0, +ev.target.value||0); save(); };
+    b.querySelector("#opendet").onclick = () => openDetailSheet(e.name);
+    b.querySelector("#delex").onclick = () => {
+      if(!confirm("Übung entfernen?")) return;
+      plan.exercises.splice(j,1); save(); closeSheet();
+    };
+  });
+}
+
+/* --- Beschreibung & Bilder --- */
+
+let detailTarget = "";
+function openDetailSheet(name){
+  detailTarget = name;
+  const det = detail(name);
+  openSheet(name, `
+    <label class="lbl">Beschreibung</label>
+    <textarea class="txt" id="dt" rows="6"
+      placeholder="Ausführung, Sitzhöhe, Griffbreite, Gewichtsstufe …">${esc(det.text)}</textarea>
+    <div class="tiny muted" style="margin-top:5px">Gilt für jede Einheit, in der diese Übung vorkommt.</div>
+
+    <label class="lbl">Bilder</label>
+    <div class="grid" id="dg"></div>
+    <button class="btn ghost" id="dadd" style="margin-top:11px">Bild hinzufügen</button>
+    <div class="tiny muted" style="margin-top:6px">Kamera oder Mediathek — iOS fragt beim Antippen.</div>
+  `, () => {
+    const b = document.getElementById("sheetbody");
+    b.querySelector("#dt").oninput = ev => {
+      const d = detail(name); d.text = ev.target.value; setDetail(name, {...d}); };
+    b.querySelector("#dadd").onclick = () => document.getElementById("filepick").click();
+    paintDetailGrid();
+  });
+}
+
+async function paintDetailGrid(){
+  const g = document.getElementById("dg");
+  if(!g) return;
+  const det = detail(detailTarget);
+  g.innerHTML = "";
+  for(const id of det.images){
+    const src = await imgGet(id);
+    if(!src) continue;
+    const box = document.createElement("div");
+    box.className = "imgbox";
+    const im = new Image(); im.src = src;
+    const del = document.createElement("button");
+    del.className = "del"; del.textContent = "×";
+    del.onclick = async () => {
+      if(!confirm("Bild löschen?")) return;
+      const d = detail(detailTarget);
+      d.images = d.images.filter(x => x !== id);
+      setDetail(detailTarget, {...d});
+      await imgDel(id);
+      paintDetailGrid();
+    };
+    box.appendChild(im); box.appendChild(del);
+    g.appendChild(box);
+  }
+}
+
+document.getElementById("filepick").onchange = async ev => {
+  const files = [...ev.target.files];
+  ev.target.value = "";
+  for(const f of files){
+    const data = await shrink(f, 1400);
+    if(!data) continue;
+    const id = uid();
+    await imgPut(id, data);
+    const d = detail(detailTarget);
+    d.images = [...d.images, id];
+    setDetail(detailTarget, {...d});
+  }
+  paintDetailGrid();
+};
+
+/* --- Export & Import --- */
+
+async function exportAll(){
+  const payload = { version: 1, exported: new Date().toISOString(), data: D, images: await imgAll() };
+  const blob = new Blob([JSON.stringify(payload)], {type:"application/json"});
+  const a = document.createElement("a");
+  const d = new Date();
+  a.href = URL.createObjectURL(blob);
+  a.download = `studio-${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}.json`;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+
+document.getElementById("jsonpick").onchange = ev => {
+  const f = ev.target.files[0];
+  ev.target.value = "";
+  if(!f) return;
+  const fr = new FileReader();
+  fr.onload = async () => {
+    try{
+      const p = JSON.parse(fr.result);
+      if(!p.data || !p.data.plans) throw 0;
+      if(!confirm("Alle aktuellen Daten werden ersetzt. Fortfahren?")) return;
+      D = p.data; save();
+      if(p.images) for(const [id, src] of Object.entries(p.images)) await imgPut(id, src);
+      alert("Wiederhergestellt.");
+      render();
+    }catch(e){ alert("Die Datei konnte nicht gelesen werden."); }
+  };
+  fr.readAsText(f);
+};
+
+/* ---------- Ereignisse ---------- */
+
+function bind(){
+  const q = (s, fn) => document.querySelectorAll(s).forEach(fn);
+
+  q("[data-start]", b => b.onclick = () => startWorkout(D.plans.find(p => p.id === b.dataset.start)));
+  q("[data-freestart]", b => b.onclick = () => startWorkout(null));
+
+  q("[data-discard]", b => b.onclick = () => {
+    if(!confirm("Training verwerfen? Die eingetragenen Sätze gehen verloren.")) return;
+    D.active = null; Rest.stop(); save(); render();
+  });
+  q("[data-finish]", b => b.onclick = () => {
+    if(!confirm("Training beenden und speichern? Nur abgehakte Sätze werden übernommen.")) return;
+    finishWorkout();
+  });
+
+  q("[data-w]", el => el.onchange = () => {
+    const [x,s] = el.dataset.w.split(".").map(Number);
+    D.active.exercises[x].sets[s].w = parseFloat(el.value.replace(",",".")) || 0; save();
+  });
+  q("[data-r]", el => el.onchange = () => {
+    const [x,s] = el.dataset.r.split(".").map(Number);
+    D.active.exercises[x].sets[s].r = parseInt(el.value) || 0; save();
+  });
+
+  q("[data-tick]", b => b.onclick = () => {
+    const [x,s] = b.dataset.tick.split(".").map(Number);
+    const set = D.active.exercises[x].sets[s];
+    set.done = !set.done;
+    save(); render();
+    if(set.done) Rest.start(D.active.exercises[x].rest, D.active.exercises[x].name);
+  });
+
+  q("[data-addset]", b => b.onclick = () => {
+    const ex = D.active.exercises[+b.dataset.addset];
+    const last = ex.sets[ex.sets.length-1];
+    ex.sets.push({ w: last ? last.w : 0, r: last ? last.r : ex.reps, done: false });
+    save(); render();
+  });
+
+  q("[data-addex]", b => b.onclick = () => {
+    const name = prompt("Name der Übung");
+    if(!name || !name.trim()) return;
+    const prev = lastLog(name.trim());
+    const ps = prev ? doneSets(prev.ex) : [];
+    D.active.exercises.push({ name: name.trim(), target: 3, reps: 10, rest: 60,
+      sets: Array.from({length:3}, (_,i) => ({ w:(ps[i]||ps[ps.length-1]||{}).w||0, r:10, done:false })) });
+    save(); render();
+  });
+
+  q("[data-info]", b => b.onclick = () => openDetailSheet(b.dataset.info));
+  q("[data-hist]", el => el.onclick = () => openHistSheet(+el.dataset.hist));
+  q("[data-plan]", el => el.onclick = () => openPlanSheet(+el.dataset.plan));
+
+  q("[data-newplan]", b => b.onclick = () => {
+    D.plans.push({ id: uid(), name: "Neue Einheit", subtitle: "", mobility: [], exercises: [] });
+    save(); openPlanSheet(D.plans.length-1);
+  });
+
+  q("[data-export]", b => b.onclick = exportAll);
+  q("[data-import]", b => b.onclick = () => document.getElementById("jsonpick").click());
+
+  const sp = document.getElementById("statpick");
+  if(sp) sp.onchange = () => { statPick = sp.value; render(); };
+}
+
+/* ---------- Start ---------- */
+
+load();
+render();
+
+setInterval(() => {
+  if(D.active && tab === "train" && !sheetStack.length && !document.hidden){
+    const el = document.querySelector("[data-finish]");
+    if(el && !document.activeElement.matches("input,textarea,select")) render();
+  }
+}, 30000);
+
+if("serviceWorker" in navigator){
+  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(()=>{}));
+}
+</script>
+</body>
+</html>
