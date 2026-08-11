@@ -58,6 +58,10 @@ hr{border:0;border-top:1px solid var(--line);margin:12px 0}
 
 .field{background:var(--fill);border:1.5px solid transparent;border-radius:10px;padding:9px 8px;text-align:right;font-size:17px;font-weight:500;font-variant-numeric:tabular-nums;width:100%;-webkit-appearance:none;appearance:none}
 .field:focus{outline:none;border-color:var(--blue);background:var(--card)}
+.fieldwrap{position:relative}
+.fieldwrap .field{padding-right:32px}
+.fieldwrap.wide .field{padding-right:42px}
+.fieldwrap .unit{position:absolute;right:9px;top:50%;transform:translateY(-50%);pointer-events:none}
 .txt{background:var(--fill);border:1.5px solid transparent;border-radius:10px;padding:11px;width:100%;font-size:16px;-webkit-appearance:none;appearance:none}
 .txt:focus{outline:none;border-color:var(--blue);background:var(--card)}
 
@@ -569,13 +573,13 @@ function exerciseCard(ex, xi){
       ${ex.sets.map((s,si) => `
         <div class="setrow ${s.done?"done":""}">
           <span class="tiny muted">${si+1}</span>
-          <div style="position:relative">
+          <div class="fieldwrap">
             <input class="field" type="text" inputmode="decimal" value="${s.w||""}" placeholder="0"
-                   data-w="${xi}.${si}"><span class="unit" style="position:absolute;right:9px;top:12px">kg</span>
+                   data-w="${xi}.${si}"><span class="unit">kg</span>
           </div>
-          <div style="position:relative">
+          <div class="fieldwrap wide">
             <input class="field" type="text" inputmode="numeric" value="${s.r||""}" placeholder="0"
-                   data-r="${xi}.${si}"><span class="unit" style="position:absolute;right:9px;top:12px">Wdh</span>
+                   data-r="${xi}.${si}"><span class="unit">Wdh</span>
           </div>
           <button class="tick ${s.done?"on":""}" data-tick="${xi}.${si}">
             <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
