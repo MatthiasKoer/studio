@@ -85,6 +85,13 @@ hr{border:0;border-top:1px solid var(--line);margin:12px 0}
 .bar{height:4px;background:var(--line);border-radius:2px;margin-top:9px;overflow:hidden}
 .bar i{display:block;height:100%;background:var(--blue);border-radius:2px;transition:width .25s linear}
 #restbar.over .bar i{background:var(--green)}
+#restbar.work #restclock{color:var(--amber)}
+#restbar.work .bar i{background:var(--amber)}
+.play{background:var(--fill);border-radius:10px;padding:9px 8px;font-size:16px;font-weight:600;color:var(--blue);font-variant-numeric:tabular-nums;width:100%;text-align:center}
+.play.run{color:var(--amber)}
+.mv{width:30px;height:30px;border-radius:8px;background:var(--fill);color:var(--tx2);font-size:14px;flex:none}
+.mv:disabled{opacity:.3}
+.seg4 button{font-size:14px;padding:8px 2px}
 
 .sheet{position:fixed;inset:0;background:var(--page);z-index:60;display:none;flex-direction:column;padding-top:var(--safe-top)}
 .sheet.show{display:flex}
@@ -191,7 +198,8 @@ const DEFAULTS = () => ({
   history: [],
   active: null,
   library: {},
-  units: {}
+  units: {},
+  hidden: []
 });
 
 function uid(){ return Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4); }
@@ -205,6 +213,7 @@ function load(){
   if(!D.history) D.history = [];
   if(!D.library) D.library = {};
   if(!D.units) D.units = {};
+  if(!D.hidden) D.hidden = [];
   /* Ältere Einträge wurden immer in kg erfasst — festschreiben, damit ein späteres Umstellen sie nicht umdeutet */
   for(const w of D.history) for(const e of w.exercises||[]) if(!e.unit) e.unit = "kg";
   if(D.active) for(const e of D.active.exercises||[]) if(!e.unit) e.unit = "kg";
@@ -291,16 +300,23 @@ function kg(v){
   const r = Math.round(v*100)/100;
   return (r === Math.round(r) ? r : de(r.toFixed(1))) + " kg";
 }
-/* Einheit je Übung: "kg" (Standard) oder "stufe" (Gewichtsstufe an der Maschine) */
+/* Einheit je Übung: "kg" (Standard), "stufe" (Gewichtsstufe an der Maschine),
+   "sek" (Haltezeit, z. B. Plank) oder "seite" (Wiederholungen pro Seite, ohne Gewicht) */
+const UNITS = ["kg","stufe","sek","seite"];
 const unitOf = name => (D.units && D.units[name]) || "kg";
 const exUnit = ex => ex.unit || unitOf(ex.name);
+const isWeight = u => u === "kg" || u === "stufe";
 function setUnit(name, u){
-  if(u === "stufe") D.units[name] = "stufe"; else delete D.units[name];
+  if(u && u !== "kg" && UNITS.includes(u)) D.units[name] = u; else delete D.units[name];
 }
 function stufe(v){ const r = Math.round(v*10)/10; return "Stufe " + (r === Math.round(r) ? r : de(r.toFixed(1))); }
 const fmtW = (v, u) => u === "stufe" ? stufe(v) : kg(v);
-const unitShort = u => u === "stufe" ? "St." : "kg";
-const unitLong = u => u === "stufe" ? "Stufe" : "kg";
+const fmtSet = (s, u) => u === "sek" ? (s.r||0) + " Sek" : u === "seite" ? (s.r||0) + " / Seite" : fmtW(s.w, u) + " × " + s.r;
+const unitShort = u => ({stufe:"St.", sek:"Sek", seite:"/Seite"})[u] || "kg";
+const unitLong = u => ({stufe:"Stufe", sek:"Sek", seite:"Wdh./Seite"})[u] || "kg";
+const repsLabel = u => u === "sek" ? "Sekunden pro Satz" : u === "seite" ? "Wiederholungen pro Seite" : "Wiederholungen";
+const planLine = e => { const u = unitOf(e.name);
+  return e.sets + " × " + e.reps + (u === "sek" ? " Sek" : u === "seite" ? " /Seite" : ""); };
 function vol(v){
   if(v >= 1000) return de((v/1000).toFixed(1)) + " t";
   return Math.round(v) + " kg";
@@ -323,12 +339,12 @@ const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp
 /* ---------- Auswertung ---------- */
 
 const doneSets = ex => (ex.sets || []).filter(s => s.done);
-const exVolume = ex => exUnit(ex) === "stufe" ? 0 : doneSets(ex).reduce((a,s) => a + (s.w||0) * (s.r||0), 0);
+const exVolume = ex => exUnit(ex) !== "kg" ? 0 : doneSets(ex).reduce((a,s) => a + (s.w||0) * (s.r||0), 0);
 const wkVolume = w => (w.exercises||[]).reduce((a,e) => a + exVolume(e), 0);
 const wkDone = w => (w.exercises||[]).reduce((a,e) => a + doneSets(e).length, 0);
 const wkPlanned = w => (w.exercises||[]).reduce((a,e) => a + (e.sets||[]).length, 0);
 function e1rm(ex){
-  if(exUnit(ex) === "stufe") return 0;
+  if(exUnit(ex) !== "kg") return 0;
   const v = doneSets(ex).filter(s => s.w > 0 && s.r > 0).map(s => s.w * (1 + s.r/30));
   return v.length ? Math.max.apply(null, v) : 0;
 }
@@ -337,7 +353,9 @@ function topLevel(ex){
   return v.length ? Math.max.apply(null, v) : 0;
 }
 /* Kennzahl für die Entwicklungskurve: kg-Übungen → 1RM-Schätzung, Stufen-Übungen → höchste Stufe */
-const progress = ex => exUnit(ex) === "stufe" ? topLevel(ex) : e1rm(ex);
+function topReps(ex){ const v = doneSets(ex).map(s => s.r||0); return v.length ? Math.max.apply(null, v) : 0; }
+const progress = ex => { const u = exUnit(ex);
+  return u === "stufe" ? topLevel(ex) : u === "kg" ? e1rm(ex) : topReps(ex); };
 
 /* Sätze vorbelegen mit den Werten vom letzten Mal — nur, wenn die Einheit gleich geblieben ist */
 function prefillSets(name, n, reps){
@@ -349,13 +367,52 @@ function prefillSets(name, n, reps){
 /* Alle bekannten Übungen: aus Plänen, Verlauf, Beschreibungen und Einheiten */
 function knownExercises(){
   const m = new Map();
-  const add = (n, t) => { if(!n) return; const o = m.get(n) || { name: n, last: 0, plan: null };
+  const hid = new Set(D.hidden || []);
+  const add = (n, t) => { if(!n || hid.has(n)) return; const o = m.get(n) || { name: n, last: 0, plan: null, plans: 0, logs: 0 };
     if(t && t > o.last) o.last = t; m.set(n, o); return o; };
-  for(const p of D.plans) for(const e of p.exercises||[]){ const o = add(e.name); if(o && !o.plan) o.plan = e; }
-  for(const w of D.history) for(const e of w.exercises||[]) add(e.name, w.start);
+  for(const p of D.plans) for(const e of p.exercises||[]){ const o = add(e.name); if(o){ o.plans++; if(!o.plan) o.plan = e; } }
+  for(const w of D.history) for(const e of w.exercises||[]){ const o = add(e.name, w.start); if(o) o.logs++; }
   Object.keys(D.library).forEach(n => add(n));
   Object.keys(D.units).forEach(n => add(n));
   return [...m.values()].sort((a,b) => a.name.localeCompare(b.name, "de"));
+}
+/* Eine gelöschte Übung taucht wieder auf, sobald man sie erneut verwendet */
+function unhide(name){ if(D.hidden && D.hidden.includes(name)) D.hidden = D.hidden.filter(n => n !== name); }
+
+/* Umbenennen bzw. Zusammenführen: alle Vorkommen (Pläne, Verlauf, laufendes Training, Beschreibung, Einheit) */
+function renameExercise(from, to){
+  if(!to || from === to) return;
+  const fix = list => (list||[]).forEach(e => { if(e.name === from) e.name = to; });
+  D.plans.forEach(p => {
+    fix(p.exercises);
+    const seen = new Set();
+    p.exercises = p.exercises.filter(e => e.name !== to || !seen.has(to) && seen.add(to));
+  });
+  D.history.forEach(w => fix(w.exercises));
+  if(D.active) fix(D.active.exercises);
+  const a = D.library[from], b = D.library[to];
+  if(a){
+    D.library[to] = b ? { text: b.text.trim() ? b.text : a.text, images: [...b.images, ...a.images] } : a;
+    delete D.library[from];
+  }
+  if(D.units[from]){ if(!D.units[to]) D.units[to] = D.units[from]; delete D.units[from]; }
+  unhide(to);
+  D.hidden = (D.hidden||[]).filter(n => n !== from);
+  if(statPick === from) statPick = to;
+  save();
+}
+
+/* Löschen aus dem Archiv: raus aus allen Plänen, Beschreibung, Bilder und Einheit weg. Der Verlauf bleibt. */
+function deleteExercise(name){
+  D.plans.forEach(p => { p.exercises = (p.exercises||[]).filter(e => e.name !== name); });
+  const det = D.library[name];
+  if(det) det.images.forEach(id => imgDel(id));
+  delete D.library[name];
+  delete D.units[name];
+  if(D.history.some(w => (w.exercises||[]).some(e => e.name === name))){
+    if(!D.hidden.includes(name)) D.hidden.push(name);
+  }
+  save();
 }
 
 function lastLog(name){
@@ -375,11 +432,15 @@ function setDetail(name, det){
 
 /* ---------- Pausen-Timer ---------- */
 
+/* mode "rest" = Pause nach einem Satz, mode "work" = Haltezeit (Sek-Übungen); onDone läuft am Ende einer Haltezeit */
 const Rest = {
-  end: 0, total: 0, running: false, label: "", tick: null, wake: null,
-  async start(sec, label){
+  end: 0, total: 0, running: false, label: "", tick: null, wake: null, mode: "rest", onDone: null, key: "",
+  async start(sec, label, opts){
     if(!sec) return;
     this.stop(true);
+    opts = opts || {};
+    this.mode = opts.mode || "rest"; this.onDone = opts.onDone || null; this.key = opts.key || "";
+    document.getElementById("restbar").classList.toggle("work", this.mode === "work");
     this.total = sec; this.label = label || ""; this.running = true;
     this.end = Date.now() + sec*1000;
     this.tick = setInterval(() => this.render(), 250);
@@ -389,10 +450,12 @@ const Rest = {
   },
   add(s){ if(!this.running) return; this.end += s*1000; this.total += s; this.render(); },
   stop(quiet){
-    this.running = false;
+    const wasWork = this.mode === "work" && this.running;
+    this.running = false; this.onDone = null; this.key = "";
     clearInterval(this.tick); this.tick = null;
     if(this.wake){ try{ this.wake.release(); }catch(e){} this.wake = null; }
-    if(!quiet){ document.getElementById("restbar").classList.remove("show","over"); }
+    if(!quiet){ document.getElementById("restbar").classList.remove("show","over","work"); }
+    if(wasWork && !quiet) render();
   },
   render(){
     const bar = document.getElementById("restbar");
@@ -403,21 +466,28 @@ const Rest = {
         this.running = false;
         clearInterval(this.tick); this.tick = null;
         if(this.wake){ try{ this.wake.release(); }catch(e){} this.wake = null; }
+        beep();
+        if(navigator.vibrate) navigator.vibrate([180,90,180]);
+        if(this.mode === "work"){
+          const fn = this.onDone; this.onDone = null; this.key = "";
+          bar.classList.remove("show","work");
+          if(fn) fn();
+          return;
+        }
         bar.classList.add("over");
         document.getElementById("resttitle").textContent = "Pause vorbei";
         document.getElementById("reststop").textContent = "OK";
         document.getElementById("restplus").classList.add("hidden");
-        beep();
-        if(navigator.vibrate) navigator.vibrate([180,90,180]);
       }
       document.getElementById("restclock").textContent = "0:00";
       document.getElementById("restfill").style.width = "100%";
       return;
     }
     bar.classList.remove("over");
-    document.getElementById("resttitle").textContent = "Pause";
+    const work = this.mode === "work";
+    document.getElementById("resttitle").textContent = work ? "Halten" : "Pause";
     document.getElementById("reststop").textContent = "Stopp";
-    document.getElementById("restplus").classList.remove("hidden");
+    document.getElementById("restplus").classList.toggle("hidden", work);
     document.getElementById("restclock").textContent = clock(left);
     document.getElementById("restlabel").textContent = this.label;
     document.getElementById("restfill").style.width = Math.min(100, (1 - left/this.total)*100) + "%";
@@ -541,7 +611,7 @@ function viewPicker(){
         <hr>
         ${p.exercises.map(e => `<div class="between small" style="padding:2px 0">
             <span class="trunc">${esc(e.name)}</span>
-            <span class="muted num">${e.sets} × ${e.reps}</span></div>`).join("")}
+            <span class="muted num">${planLine(e)}</span></div>`).join("")}
         ${p.mobility && p.mobility.length ? `
         <details style="margin-top:10px">
           <summary class="eyebrow" style="cursor:pointer">Aufwärmen &amp; Mobilität</summary>
@@ -600,7 +670,7 @@ function exerciseCard(ex, xi){
   return `<div class="card">
     <div class="between">
       <b class="grow trunc" style="font-size:17px;font-weight:600">${esc(ex.name)}</b>
-      <span class="muted small num">${ex.target||ex.sets.length} × ${ex.reps}</span>
+      <span class="muted small num">${ex.target||ex.sets.length} × ${ex.reps}${u==="sek"?" Sek":""}</span>
       <button class="unitchip" data-unit="${xi}">${unitLong(u)}</button>
       <button data-info="${esc(ex.name)}" style="color:${det.text||det.images.length ? "var(--blue)":"var(--tx3)"};font-size:20px;padding:0 2px">ⓘ</button>
     </div>
@@ -610,20 +680,25 @@ function exerciseCard(ex, xi){
 
     ${prev ? `<div style="margin-top:9px">
         <div class="eyebrow">Letztes Mal · ${dayShort(prev.start)}</div>
-        <div class="small muted num">${doneSets(prev.ex).map(s => fmtW(s.w, exUnit(prev.ex))+" × "+s.r).join("&nbsp;&nbsp; ")}</div>
+        <div class="small muted num">${doneSets(prev.ex).map(s => fmtSet(s, exUnit(prev.ex))).join("&nbsp;&nbsp; ")}</div>
       </div>` : ""}
 
     <div style="margin-top:9px">
       ${ex.sets.map((s,si) => `
         <div class="setrow ${s.done?"done":""}">
           <span class="tiny muted">${si+1}</span>
-          <div class="fieldwrap">
+          ${u === "sek"
+            ? (() => { const run = Rest.running && Rest.key === xi+"."+si;
+                return `<button class="play ${run?"run":""}" data-hold="${xi}.${si}">${run ? "läuft …" : "▶ " + clock(s.r || ex.reps)}</button>`; })()
+            : u === "seite"
+            ? `<span class="small muted">pro Seite</span>`
+            : `<div class="fieldwrap">
             <input class="field" type="text" inputmode="decimal" value="${s.w||""}" placeholder="0"
                    data-w="${xi}.${si}"><span class="unit">${unitShort(u)}</span>
-          </div>
+          </div>`}
           <div class="fieldwrap wide">
             <input class="field" type="text" inputmode="numeric" value="${s.r||""}" placeholder="0"
-                   data-r="${xi}.${si}"><span class="unit">Wdh</span>
+                   data-r="${xi}.${si}"><span class="unit">${u === "sek" ? "Sek" : "Wdh"}</span>
           </div>
           <button class="tick ${s.done?"on":""}" data-tick="${xi}.${si}">
             <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
@@ -693,7 +768,7 @@ function openHistSheet(i){
       <div style="margin-top:7px">
         ${doneSets(ex).map((s,i) => `<div class="row small num" style="padding:2px 0">
           <span class="muted" style="width:16px">${i+1}</span>
-          <span>${fmtW(s.w, exUnit(ex))}</span><span class="muted">×</span><span>${s.r}</span></div>`).join("")}
+          <span>${fmtSet(s, exUnit(ex))}</span></div>`).join("")}
       </div>
       ${e1rm(ex) ? `<div class="tiny muted" style="margin-top:6px">Bester Satz ≈ ${kg(e1rm(ex))} 1RM</div>` : ""}
     </div>`).join("")}
@@ -741,7 +816,8 @@ function viewStats(){
     .map(w => ({ t: w.start, v: progress(w.exercises.find(e => e.name === statPick)) }))
     .sort((a,b) => a.t - b.t);
 
-  const statStufe = unitOf(statPick) === "stufe";
+  const statUnit = unitOf(statPick);
+  const statStufe = statUnit === "stufe";
   let chart = `<p class="small muted">Mindestens zwei Einheiten mit dieser Übung nötig, damit eine Kurve entsteht.</p>`;
   if(pts.length >= 2){
     const lo = Math.min(...pts.map(p=>p.v)), hi = Math.max(...pts.map(p=>p.v));
@@ -759,7 +835,11 @@ function viewStats(){
       </svg>
       <div class="small num" style="font-weight:600;color:${change>=0?"var(--green)":"var(--tx2)"}">
         ${change>=0?"+":""}${change} % seit ${dayShort(pts[0].t)}</div>
-      <div class="tiny muted" style="margin-top:4px">${statStufe
+      <div class="tiny muted" style="margin-top:4px">${statUnit === "sek"
+        ? "Längste Haltezeit je Einheit, in Sekunden."
+        : statUnit === "seite"
+        ? "Meiste Wiederholungen pro Seite je Einheit."
+        : statStufe
         ? "Höchste Gewichtsstufe je Einheit. Bei Stufen lässt sich kein Maximalgewicht schätzen."
         : "Geschätztes Einwiederholungsmaximum nach Epley — macht Sätze mit unterschiedlichen Wiederholungszahlen vergleichbar. Übungen mit Stufen fließen nicht ins Volumen ein."}</div>`;
   }
@@ -801,6 +881,7 @@ function viewPlans(){
         <span class="muted">›</span></div>`).join("")}
     </div>
     <button class="btn ghost" data-newplan style="margin-top:12px">Plan hinzufügen</button>
+    <button class="btn ghost" data-archive style="margin-top:9px">Übungsarchiv verwalten</button>
 
     <div class="card" style="margin-top:22px">
       <div class="eyebrow">Daten sichern</div>
@@ -823,8 +904,10 @@ function openPlanSheet(i){
 
     <label class="lbl">Übungen</label>
     <div class="card" style="padding:4px 14px">
-      ${p.exercises.map((e,j) => `<div class="listitem between" data-ex="${j}">
-        <span class="grow trunc">${esc(e.name)}</span>
+      ${p.exercises.map((e,j) => `<div class="listitem between" data-ex="${j}" style="gap:6px">
+        <button class="mv" data-mv="${j}.-1" ${j===0?"disabled":""} aria-label="nach oben">▲</button>
+        <button class="mv" data-mv="${j}.1" ${j===p.exercises.length-1?"disabled":""} aria-label="nach unten">▼</button>
+        <span class="grow trunc" style="margin-left:4px">${esc(e.name)}</span>
         <span class="muted small num">${e.sets} × ${e.reps} · ${unitShort(unitOf(e.name))}</span>
         <span class="muted">›</span></div>`).join("") || '<div class="listitem muted small">Noch keine Übung.</div>'}
     </div>
@@ -832,7 +915,7 @@ function openPlanSheet(i){
 
     ${p.exercises.length ? `<label class="lbl">Gewicht für alle Übungen dieses Plans</label>
     <div class="seg"><button id="allkg">in kg</button><button id="allst">in Stufen</button></div>
-    <div class="tiny muted" style="margin-top:5px">Praktisch für ein Studio, in dem die Maschinen nur Stufen haben. Einzelne Übungen kannst du danach noch umstellen.</div>` : ""}
+    <div class="tiny muted" style="margin-top:5px">Praktisch für ein Studio, in dem die Maschinen nur Stufen haben. Übungen in Sek oder Wdh./Seite bleiben unverändert. Einzelne Übungen kannst du danach noch umstellen.</div>` : ""}
 
     <label class="lbl">Aufwärmen &amp; Mobilität</label>
     <textarea class="txt" id="pm" rows="5">${esc((p.mobility||[]).join("\n"))}</textarea>
@@ -850,9 +933,21 @@ function openPlanSheet(i){
       p.mobility = e.target.value.split("\n").map(s => s.trim()).filter(Boolean); save(); };
     b.querySelectorAll("[data-ex]").forEach(el =>
       el.onclick = () => openExerciseSheet(p, +el.dataset.ex));
+    b.querySelectorAll("[data-mv]").forEach(btn => btn.onclick = ev => {
+      ev.stopPropagation();
+      const [j, d] = btn.dataset.mv.split(".").map(Number);
+      const k = j + d;
+      if(k < 0 || k >= p.exercises.length) return;
+      [p.exercises[j], p.exercises[k]] = [p.exercises[k], p.exercises[j]];
+      save();
+      const y = b.scrollTop;
+      sheetStack.pop(); openPlanSheet(i);
+      document.getElementById("sheetbody").scrollTop = y;
+    });
     b.querySelector("#addex").onclick = () => openPicker("Übung zum Plan", (name, isNew) => {
       const tpl = knownExercises().find(k => k.name === name);
       const src = tpl && tpl.plan;
+      unhide(name);
       p.exercises.push({ id: uid(), name,
         sets: src ? src.sets : 3, reps: src ? src.reps : 10, rest: src ? src.rest : 60 });
       save();
@@ -861,7 +956,7 @@ function openPlanSheet(i){
       if(isNew) openExerciseSheet(p, p.exercises.length-1);
     });
     const bulk = u => {
-      p.exercises.forEach(e => setUnit(e.name, u)); save();
+      p.exercises.forEach(e => { if(isWeight(unitOf(e.name))) setUnit(e.name, u); }); save();
       sheetStack.pop(); openPlanSheet(i);
     };
     const ak = b.querySelector("#allkg"), as = b.querySelector("#allst");
@@ -912,16 +1007,18 @@ function openExerciseSheet(plan, j){
 
     <button class="btn ghost" id="opendet" style="margin-top:14px">Beschreibung &amp; Bilder</button>
 
-    <label class="lbl">Gewicht angeben in</label>
-    <div class="seg">
+    <label class="lbl">Angabe in</label>
+    <div class="seg seg4">
       <button data-u="kg" class="${unitOf(e.name)==="kg"?"on":""}">kg</button>
       <button data-u="stufe" class="${unitOf(e.name)==="stufe"?"on":""}">Stufen</button>
+      <button data-u="sek" class="${unitOf(e.name)==="sek"?"on":""}">Sek</button>
+      <button data-u="seite" class="${unitOf(e.name)==="seite"?"on":""}">Wdh./Seite</button>
     </div>
-    <div class="tiny muted" style="margin-top:5px">Gilt überall, wo diese Übung vorkommt. Für ein anderes Studio mit anderer Angabe: Plan duplizieren und ein Kürzel vergeben.</div>
+    <div class="tiny muted" style="margin-top:5px">Sek: Haltezeit mit Countdown im Training, z. B. Plank. Wdh./Seite: ohne Gewicht, z. B. Dead Bugs. Gilt überall, wo diese Übung vorkommt.</div>
 
     <label class="lbl">Sätze</label>
     <input class="txt" id="es" type="number" inputmode="numeric" value="${e.sets}">
-    <label class="lbl">Wiederholungen</label>
+    <label class="lbl" id="erl">${repsLabel(unitOf(e.name))}</label>
     <input class="txt" id="er" type="number" inputmode="numeric" value="${e.reps}">
     <label class="lbl">Pause in Sekunden</label>
     <input class="txt" id="ep" type="number" inputmode="numeric" step="15" value="${e.rest}">
@@ -942,6 +1039,7 @@ function openExerciseSheet(plan, j){
     b.querySelectorAll("[data-u]").forEach(btn => btn.onclick = () => {
       setUnit(e.name, btn.dataset.u); save();
       b.querySelectorAll("[data-u]").forEach(x => x.classList.toggle("on", x === btn));
+      b.querySelector("#erl").textContent = repsLabel(btn.dataset.u);
     });
     b.querySelector("#delex").onclick = () => {
       if(!confirm("Übung entfernen?")) return;
@@ -980,6 +1078,71 @@ function openPicker(title, onPick){
     };
     qi.oninput = paint;
     paint();
+  });
+}
+
+/* --- Übungsarchiv verwalten --- */
+
+function openArchiveSheet(){
+  const all = knownExercises();
+  openSheet("Übungsarchiv", `
+    <p class="small muted" style="margin:0 0 10px">Tippe auf eine Übung, um sie umzubenennen, mit einer anderen zusammenzuführen oder zu löschen.</p>
+    <div class="card" style="padding:4px 14px">
+      ${all.map(k => `<div class="listitem between" data-arch="${esc(k.name)}" style="cursor:pointer">
+        <div class="grow" style="min-width:0"><div class="trunc">${esc(k.name)}</div>
+          <div class="tiny muted">${unitLong(unitOf(k.name))} · ${k.plans} ${k.plans===1?"Plan":"Pläne"} · ${k.logs} ${k.logs===1?"Training":"Trainings"}</div></div>
+        <span class="muted">›</span></div>`).join("") || '<div class="listitem muted small">Noch keine Übungen im Archiv.</div>'}
+    </div>
+  `, () => {
+    document.querySelectorAll("#sheetbody [data-arch]").forEach(el =>
+      el.onclick = () => openArchiveItem(el.dataset.arch));
+  });
+}
+
+function reopenArchive(){
+  sheetStack.pop(); sheetStack.pop();
+  openArchiveSheet();
+}
+
+function openArchiveItem(name){
+  const k = knownExercises().find(x => x.name === name) || { plans: 0, logs: 0 };
+  const others = knownExercises().filter(x => x.name !== name);
+  openSheet(name, `
+    <label class="lbl">Umbenennen</label>
+    <input class="txt" id="an" value="${esc(name)}" autocomplete="off">
+    <button class="btn" id="aren" style="margin-top:10px">Umbenennen</button>
+    <div class="tiny muted" style="margin-top:5px">Ändert den Namen überall — in allen Plänen und im Verlauf. Gibt es den neuen Namen schon, werden beide Übungen zusammengeführt.</div>
+
+    ${others.length ? `<label class="lbl">Zusammenführen mit</label>
+    <select class="txt" id="amerge">
+      <option value="">Übung wählen …</option>
+      ${others.map(o => `<option value="${esc(o.name)}">${esc(o.name)}</option>`).join("")}
+    </select>
+    <button class="btn ghost" id="amgo" style="margin-top:10px">Zusammenführen</button>
+    <div class="tiny muted" style="margin-top:5px">„${esc(name)}“ verschwindet, alle Einträge wandern zur gewählten Übung. Praktisch bei Tippfehlern.</div>` : ""}
+
+    <button class="btn danger" id="adel" style="margin-top:26px">Aus Archiv löschen</button>
+    <div class="tiny muted" style="margin-top:5px">Entfernt die Übung aus ${k.plans===1?"1 Plan":k.plans+" Plänen"} und löscht Beschreibung und Bilder. ${k.logs ? "Die " + k.logs + " gespeicherten Trainings im Verlauf bleiben erhalten." : ""}</div>
+  `, () => {
+    const b = document.getElementById("sheetbody");
+    const doRename = to => {
+      to = (to||"").trim();
+      if(!to || to === name) return;
+      const exists = knownExercises().some(x => x.name === to) || D.history.some(w => (w.exercises||[]).some(e => e.name === to));
+      if(!confirm(exists
+        ? "„" + name + "“ mit „" + to + "“ zusammenführen?\n\nAlle Einträge laufen danach unter „" + to + "“."
+        : "„" + name + "“ überall in „" + to + "“ umbenennen?")) return;
+      renameExercise(name, to);
+      reopenArchive();
+    };
+    b.querySelector("#aren").onclick = () => doRename(b.querySelector("#an").value);
+    const mg = b.querySelector("#amgo");
+    if(mg) mg.onclick = () => doRename(b.querySelector("#amerge").value);
+    b.querySelector("#adel").onclick = () => {
+      if(!confirm("„" + name + "“ wirklich aus dem Archiv löschen?")) return;
+      deleteExercise(name);
+      reopenArchive();
+    };
   });
 }
 
@@ -1115,6 +1278,22 @@ function bind(){
     if(set.done) Rest.start(D.active.exercises[x].rest, D.active.exercises[x].name);
   });
 
+  q("[data-hold]", b => b.onclick = () => {
+    const key = b.dataset.hold;
+    const [x,si] = key.split(".").map(Number);
+    const ex = D.active.exercises[x];
+    if(Rest.running && Rest.key === key){ Rest.stop(); return; }
+    const secs = ex.sets[si].r || ex.reps;
+    Rest.start(secs, ex.name + " · Satz " + (si+1), { mode: "work", key, onDone: () => {
+      if(!D.active || !D.active.exercises[x] || !D.active.exercises[x].sets[si]) return;
+      const set = D.active.exercises[x].sets[si];
+      set.done = true; if(!set.r) set.r = secs;
+      save(); render();
+      Rest.start(ex.rest, ex.name);
+    }});
+    render();
+  });
+
   q("[data-addset]", b => b.onclick = () => {
     const ex = D.active.exercises[+b.dataset.addset];
     const last = ex.sets[ex.sets.length-1];
@@ -1126,6 +1305,7 @@ function bind(){
     const tpl = knownExercises().find(k => k.name === name);
     const src = tpl && tpl.plan;
     const n = src ? src.sets : 3, reps = src ? src.reps : 10;
+    unhide(name);
     D.active.exercises.push({ name, unit: unitOf(name), target: n, reps, rest: src ? src.rest : 60,
       sets: prefillSets(name, n, reps) });
     save(); closeSheet();
@@ -1133,6 +1313,7 @@ function bind(){
 
   q("[data-unit]", b => b.onclick = () => {
     const ex = D.active.exercises[+b.dataset.unit];
+    if(!isWeight(exUnit(ex))){ alert("Die Angabe für diese Übung (" + unitLong(exUnit(ex)) + ") änderst du unter Pläne → Übung."); return; }
     const nu = exUnit(ex) === "stufe" ? "kg" : "stufe";
     if(!confirm("„" + ex.name + "“ ab jetzt in " + (nu === "stufe" ? "Stufen" : "kg") + " eintragen?\n\nGilt auch für künftige Trainings mit dieser Übung.")) return;
     ex.unit = nu; setUnit(ex.name, nu);
@@ -1149,6 +1330,7 @@ function bind(){
     save(); openPlanSheet(D.plans.length-1);
   });
 
+  q("[data-archive]", b => b.onclick = openArchiveSheet);
   q("[data-export]", b => b.onclick = exportAll);
   q("[data-import]", b => b.onclick = () => document.getElementById("jsonpick").click());
 
