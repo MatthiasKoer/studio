@@ -109,6 +109,10 @@ hr{border:0;border-top:1px solid var(--line);margin:12px 0}
 .empty b{display:block;color:var(--tx);font-size:17px;margin-bottom:6px}
 .listitem{padding:12px 0;border-bottom:1px solid var(--line)}
 .listitem:last-child{border-bottom:0}
+.seg{display:flex;background:var(--fill);border-radius:10px;padding:3px;gap:3px}
+.seg button{flex:1;padding:8px;border-radius:8px;font-size:15px;font-weight:500;color:var(--tx2)}
+.seg button.on{background:var(--card);color:var(--tx);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.unitchip{background:var(--fill);border-radius:7px;padding:2px 8px;font-size:12px;font-weight:600;color:var(--tx2);flex:none}
 select.txt{background-image:none}
 label.lbl{display:block;font-size:13px;color:var(--tx2);margin:14px 0 5px}
 .hidden{display:none!important}
@@ -186,7 +190,8 @@ const DEFAULTS = () => ({
   ],
   history: [],
   active: null,
-  library: {}
+  library: {},
+  units: {}
 });
 
 function uid(){ return Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4); }
@@ -199,6 +204,10 @@ function load(){
   if(!D.plans) D.plans = [];
   if(!D.history) D.history = [];
   if(!D.library) D.library = {};
+  if(!D.units) D.units = {};
+  /* Ältere Einträge wurden immer in kg erfasst — festschreiben, damit ein späteres Umstellen sie nicht umdeutet */
+  for(const w of D.history) for(const e of w.exercises||[]) if(!e.unit) e.unit = "kg";
+  if(D.active) for(const e of D.active.exercises||[]) if(!e.unit) e.unit = "kg";
 }
 function save(){
   try{ localStorage.setItem(KEY, JSON.stringify(D)); }
@@ -282,6 +291,16 @@ function kg(v){
   const r = Math.round(v*100)/100;
   return (r === Math.round(r) ? r : de(r.toFixed(1))) + " kg";
 }
+/* Einheit je Übung: "kg" (Standard) oder "stufe" (Gewichtsstufe an der Maschine) */
+const unitOf = name => (D.units && D.units[name]) || "kg";
+const exUnit = ex => ex.unit || unitOf(ex.name);
+function setUnit(name, u){
+  if(u === "stufe") D.units[name] = "stufe"; else delete D.units[name];
+}
+function stufe(v){ const r = Math.round(v*10)/10; return "Stufe " + (r === Math.round(r) ? r : de(r.toFixed(1))); }
+const fmtW = (v, u) => u === "stufe" ? stufe(v) : kg(v);
+const unitShort = u => u === "stufe" ? "St." : "kg";
+const unitLong = u => u === "stufe" ? "Stufe" : "kg";
 function vol(v){
   if(v >= 1000) return de((v/1000).toFixed(1)) + " t";
   return Math.round(v) + " kg";
@@ -304,14 +323,41 @@ const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp
 /* ---------- Auswertung ---------- */
 
 const doneSets = ex => (ex.sets || []).filter(s => s.done);
-const exVolume = ex => doneSets(ex).reduce((a,s) => a + (s.w||0) * (s.r||0), 0);
+const exVolume = ex => exUnit(ex) === "stufe" ? 0 : doneSets(ex).reduce((a,s) => a + (s.w||0) * (s.r||0), 0);
 const wkVolume = w => (w.exercises||[]).reduce((a,e) => a + exVolume(e), 0);
 const wkDone = w => (w.exercises||[]).reduce((a,e) => a + doneSets(e).length, 0);
 const wkPlanned = w => (w.exercises||[]).reduce((a,e) => a + (e.sets||[]).length, 0);
 function e1rm(ex){
+  if(exUnit(ex) === "stufe") return 0;
   const v = doneSets(ex).filter(s => s.w > 0 && s.r > 0).map(s => s.w * (1 + s.r/30));
   return v.length ? Math.max.apply(null, v) : 0;
 }
+function topLevel(ex){
+  const v = doneSets(ex).filter(s => s.w > 0).map(s => s.w);
+  return v.length ? Math.max.apply(null, v) : 0;
+}
+/* Kennzahl für die Entwicklungskurve: kg-Übungen → 1RM-Schätzung, Stufen-Übungen → höchste Stufe */
+const progress = ex => exUnit(ex) === "stufe" ? topLevel(ex) : e1rm(ex);
+
+/* Sätze vorbelegen mit den Werten vom letzten Mal — nur, wenn die Einheit gleich geblieben ist */
+function prefillSets(name, n, reps){
+  const prev = lastLog(name);
+  const ps = prev && exUnit(prev.ex) === unitOf(name) ? doneSets(prev.ex) : [];
+  return Array.from({length: n}, (_,i) => ({ w: (ps[i] || ps[ps.length-1] || {}).w || 0, r: reps, done: false }));
+}
+
+/* Alle bekannten Übungen: aus Plänen, Verlauf, Beschreibungen und Einheiten */
+function knownExercises(){
+  const m = new Map();
+  const add = (n, t) => { if(!n) return; const o = m.get(n) || { name: n, last: 0, plan: null };
+    if(t && t > o.last) o.last = t; m.set(n, o); return o; };
+  for(const p of D.plans) for(const e of p.exercises||[]){ const o = add(e.name); if(o && !o.plan) o.plan = e; }
+  for(const w of D.history) for(const e of w.exercises||[]) add(e.name, w.start);
+  Object.keys(D.library).forEach(n => add(n));
+  Object.keys(D.units).forEach(n => add(n));
+  return [...m.values()].sort((a,b) => a.name.localeCompare(b.name, "de"));
+}
+
 function lastLog(name){
   const h = D.history.slice().sort((a,b) => b.start - a.start);
   for(const w of h){
@@ -516,13 +562,9 @@ function startWorkout(plan){
     title: plan ? plan.name + " – " + plan.subtitle : "Freies Training",
     start: Date.now(), end: null, exercises: [] };
   if(plan){
-    w.exercises = plan.exercises.map(pe => {
-      const prev = lastLog(pe.name);
-      const ps = prev ? doneSets(prev.ex) : [];
-      return { name: pe.name, target: pe.sets, reps: pe.reps, rest: pe.rest,
-        sets: Array.from({length: pe.sets}, (_,i) => ({
-          w: (ps[i] || ps[ps.length-1] || {}).w || 0, r: pe.reps, done: false })) };
-    });
+    w.exercises = plan.exercises.map(pe => ({
+      name: pe.name, unit: unitOf(pe.name), target: pe.sets, reps: pe.reps, rest: pe.rest,
+      sets: prefillSets(pe.name, pe.sets, pe.reps) }));
   }
   D.active = w; save(); render();
 }
@@ -554,10 +596,12 @@ function viewWorkout(){
 function exerciseCard(ex, xi){
   const prev = lastLog(ex.name);
   const det = detail(ex.name);
+  const u = exUnit(ex);
   return `<div class="card">
     <div class="between">
       <b class="grow trunc" style="font-size:17px;font-weight:600">${esc(ex.name)}</b>
       <span class="muted small num">${ex.target||ex.sets.length} × ${ex.reps}</span>
+      <button class="unitchip" data-unit="${xi}">${unitLong(u)}</button>
       <button data-info="${esc(ex.name)}" style="color:${det.text||det.images.length ? "var(--blue)":"var(--tx3)"};font-size:20px;padding:0 2px">ⓘ</button>
     </div>
 
@@ -566,7 +610,7 @@ function exerciseCard(ex, xi){
 
     ${prev ? `<div style="margin-top:9px">
         <div class="eyebrow">Letztes Mal · ${dayShort(prev.start)}</div>
-        <div class="small muted num">${doneSets(prev.ex).map(s => kg(s.w)+" × "+s.r).join("&nbsp;&nbsp; ")}</div>
+        <div class="small muted num">${doneSets(prev.ex).map(s => fmtW(s.w, exUnit(prev.ex))+" × "+s.r).join("&nbsp;&nbsp; ")}</div>
       </div>` : ""}
 
     <div style="margin-top:9px">
@@ -575,7 +619,7 @@ function exerciseCard(ex, xi){
           <span class="tiny muted">${si+1}</span>
           <div class="fieldwrap">
             <input class="field" type="text" inputmode="decimal" value="${s.w||""}" placeholder="0"
-                   data-w="${xi}.${si}"><span class="unit">kg</span>
+                   data-w="${xi}.${si}"><span class="unit">${unitShort(u)}</span>
           </div>
           <div class="fieldwrap wide">
             <input class="field" type="text" inputmode="numeric" value="${s.r||""}" placeholder="0"
@@ -649,7 +693,7 @@ function openHistSheet(i){
       <div style="margin-top:7px">
         ${doneSets(ex).map((s,i) => `<div class="row small num" style="padding:2px 0">
           <span class="muted" style="width:16px">${i+1}</span>
-          <span>${kg(s.w)}</span><span class="muted">×</span><span>${s.r}</span></div>`).join("")}
+          <span>${fmtW(s.w, exUnit(ex))}</span><span class="muted">×</span><span>${s.r}</span></div>`).join("")}
       </div>
       ${e1rm(ex) ? `<div class="tiny muted" style="margin-top:6px">Bester Satz ≈ ${kg(e1rm(ex))} 1RM</div>` : ""}
     </div>`).join("")}
@@ -693,10 +737,11 @@ function viewStats(){
   if(!names.includes(statPick)) statPick = names[0] || "";
 
   const pts = D.history
-    .filter(w => w.exercises.some(e => e.name === statPick && e1rm(e) > 0))
-    .map(w => ({ t: w.start, v: e1rm(w.exercises.find(e => e.name === statPick)) }))
+    .filter(w => w.exercises.some(e => e.name === statPick && progress(e) > 0))
+    .map(w => ({ t: w.start, v: progress(w.exercises.find(e => e.name === statPick)) }))
     .sort((a,b) => a.t - b.t);
 
+  const statStufe = unitOf(statPick) === "stufe";
   let chart = `<p class="small muted">Mindestens zwei Einheiten mit dieser Übung nötig, damit eine Kurve entsteht.</p>`;
   if(pts.length >= 2){
     const lo = Math.min(...pts.map(p=>p.v)), hi = Math.max(...pts.map(p=>p.v));
@@ -714,7 +759,9 @@ function viewStats(){
       </svg>
       <div class="small num" style="font-weight:600;color:${change>=0?"var(--green)":"var(--tx2)"}">
         ${change>=0?"+":""}${change} % seit ${dayShort(pts[0].t)}</div>
-      <div class="tiny muted" style="margin-top:4px">Geschätztes Einwiederholungsmaximum nach Epley — macht Sätze mit unterschiedlichen Wiederholungszahlen vergleichbar.</div>`;
+      <div class="tiny muted" style="margin-top:4px">${statStufe
+        ? "Höchste Gewichtsstufe je Einheit. Bei Stufen lässt sich kein Maximalgewicht schätzen."
+        : "Geschätztes Einwiederholungsmaximum nach Epley — macht Sätze mit unterschiedlichen Wiederholungszahlen vergleichbar. Übungen mit Stufen fließen nicht ins Volumen ein."}</div>`;
   }
 
   return `<div class="wrap"><h1>Statistik</h1>
@@ -778,10 +825,14 @@ function openPlanSheet(i){
     <div class="card" style="padding:4px 14px">
       ${p.exercises.map((e,j) => `<div class="listitem between" data-ex="${j}">
         <span class="grow trunc">${esc(e.name)}</span>
-        <span class="muted small num">${e.sets} × ${e.reps}</span>
+        <span class="muted small num">${e.sets} × ${e.reps} · ${unitShort(unitOf(e.name))}</span>
         <span class="muted">›</span></div>`).join("") || '<div class="listitem muted small">Noch keine Übung.</div>'}
     </div>
     <button class="btn ghost" id="addex" style="margin-top:10px">Übung hinzufügen</button>
+
+    ${p.exercises.length ? `<label class="lbl">Gewicht für alle Übungen dieses Plans</label>
+    <div class="seg"><button id="allkg">in kg</button><button id="allst">in Stufen</button></div>
+    <div class="tiny muted" style="margin-top:5px">Praktisch für ein Studio, in dem die Maschinen nur Stufen haben. Einzelne Übungen kannst du danach noch umstellen.</div>` : ""}
 
     <label class="lbl">Aufwärmen &amp; Mobilität</label>
     <textarea class="txt" id="pm" rows="5">${esc((p.mobility||[]).join("\n"))}</textarea>
@@ -799,10 +850,22 @@ function openPlanSheet(i){
       p.mobility = e.target.value.split("\n").map(s => s.trim()).filter(Boolean); save(); };
     b.querySelectorAll("[data-ex]").forEach(el =>
       el.onclick = () => openExerciseSheet(p, +el.dataset.ex));
-    b.querySelector("#addex").onclick = () => {
-      p.exercises.push({ id: uid(), name: "Neue Übung", sets: 3, reps: 10, rest: 60 });
-      save(); openExerciseSheet(p, p.exercises.length-1);
+    b.querySelector("#addex").onclick = () => openPicker("Übung zum Plan", (name, isNew) => {
+      const tpl = knownExercises().find(k => k.name === name);
+      const src = tpl && tpl.plan;
+      p.exercises.push({ id: uid(), name,
+        sets: src ? src.sets : 3, reps: src ? src.reps : 10, rest: src ? src.rest : 60 });
+      save();
+      sheetStack.pop(); sheetStack.pop();
+      openPlanSheet(i);
+      if(isNew) openExerciseSheet(p, p.exercises.length-1);
+    });
+    const bulk = u => {
+      p.exercises.forEach(e => setUnit(e.name, u)); save();
+      sheetStack.pop(); openPlanSheet(i);
     };
+    const ak = b.querySelector("#allkg"), as = b.querySelector("#allst");
+    if(ak){ ak.onclick = () => bulk("kg"); as.onclick = () => bulk("stufe"); }
     b.querySelector("#dupplan").onclick = () => {
       const suffix = prompt(
         "Kürzel für die Übungen? Zum Beispiel „S53“.\n\n" +
@@ -825,6 +888,7 @@ function openPlanSheet(i){
         for(const e of p.exercises||[]){
           const src = D.library[e.name];
           if(src) D.library[e.name + " " + s] = { text: src.text, images: [...src.images] };
+          if(D.units[e.name]) D.units[e.name + " " + s] = D.units[e.name];
         }
       }
       D.plans.push(copy); save();
@@ -841,12 +905,19 @@ function openPlanSheet(i){
 
 function openExerciseSheet(plan, j){
   const e = plan.exercises[j];
-  const before = e.name;
+  let before = e.name;
   openSheet("Übung", `
     <label class="lbl">Name</label>
     <input class="txt" id="en" value="${esc(e.name)}">
 
     <button class="btn ghost" id="opendet" style="margin-top:14px">Beschreibung &amp; Bilder</button>
+
+    <label class="lbl">Gewicht angeben in</label>
+    <div class="seg">
+      <button data-u="kg" class="${unitOf(e.name)==="kg"?"on":""}">kg</button>
+      <button data-u="stufe" class="${unitOf(e.name)==="stufe"?"on":""}">Stufen</button>
+    </div>
+    <div class="tiny muted" style="margin-top:5px">Gilt überall, wo diese Übung vorkommt. Für ein anderes Studio mit anderer Angabe: Plan duplizieren und ein Kürzel vergeben.</div>
 
     <label class="lbl">Sätze</label>
     <input class="txt" id="es" type="number" inputmode="numeric" value="${e.sets}">
@@ -861,16 +932,54 @@ function openExerciseSheet(plan, j){
     b.querySelector("#en").oninput = ev => {
       const now = ev.target.value;
       if(before !== now && D.library[before]){ D.library[now] = D.library[before]; delete D.library[before]; }
-      e.name = now; save();
+      if(before !== now && D.units[before]){ D.units[now] = D.units[before]; delete D.units[before]; }
+      e.name = now; before = now; save();
     };
     b.querySelector("#es").oninput = ev => { e.sets = Math.max(1, +ev.target.value||1); save(); };
     b.querySelector("#er").oninput = ev => { e.reps = Math.max(1, +ev.target.value||1); save(); };
     b.querySelector("#ep").oninput = ev => { e.rest = Math.max(0, +ev.target.value||0); save(); };
     b.querySelector("#opendet").onclick = () => openDetailSheet(e.name);
+    b.querySelectorAll("[data-u]").forEach(btn => btn.onclick = () => {
+      setUnit(e.name, btn.dataset.u); save();
+      b.querySelectorAll("[data-u]").forEach(x => x.classList.toggle("on", x === btn));
+    });
     b.querySelector("#delex").onclick = () => {
       if(!confirm("Übung entfernen?")) return;
       plan.exercises.splice(j,1); save(); closeSheet();
     };
+  });
+}
+
+/* --- Übungsarchiv: Auswahl --- */
+
+function openPicker(title, onPick){
+  const all = knownExercises();
+  openSheet(title, `
+    <input class="txt" id="pq" placeholder="Suchen oder neuen Namen eingeben" autocomplete="off">
+    <div id="pnew"></div>
+    <div class="card" style="padding:4px 14px;margin-top:10px" id="plist"></div>
+  `, () => {
+    const b = document.getElementById("sheetbody");
+    const qi = b.querySelector("#pq");
+    const paint = () => {
+      const q = qi.value.trim();
+      const ql = q.toLowerCase();
+      const hits = all.filter(k => !ql || k.name.toLowerCase().includes(ql));
+      const exact = all.some(k => k.name.toLowerCase() === ql);
+      b.querySelector("#pnew").innerHTML = q && !exact
+        ? `<button class="btn" id="pmk" style="margin-top:10px">Neu anlegen: „${esc(q)}“</button>` : "";
+      b.querySelector("#plist").innerHTML = hits.map(k => `
+        <div class="listitem between" data-pick="${esc(k.name)}" style="cursor:pointer">
+          <div class="grow" style="min-width:0"><div class="trunc">${esc(k.name)}</div>
+            <div class="tiny muted">${unitLong(unitOf(k.name))}${k.last ? " · zuletzt " + dayShort(k.last) : ""}</div></div>
+          <span class="muted">+</span></div>`).join("")
+        || `<div class="listitem muted small">${all.length ? "Keine passende Übung." : "Noch keine Übungen im Archiv."}</div>`;
+      b.querySelectorAll("[data-pick]").forEach(el => el.onclick = () => onPick(el.dataset.pick, false));
+      const mk = b.querySelector("#pmk");
+      if(mk) mk.onclick = () => onPick(q, true);
+    };
+    qi.oninput = paint;
+    paint();
   });
 }
 
@@ -1013,13 +1122,21 @@ function bind(){
     save(); render();
   });
 
-  q("[data-addex]", b => b.onclick = () => {
-    const name = prompt("Name der Übung");
-    if(!name || !name.trim()) return;
-    const prev = lastLog(name.trim());
-    const ps = prev ? doneSets(prev.ex) : [];
-    D.active.exercises.push({ name: name.trim(), target: 3, reps: 10, rest: 60,
-      sets: Array.from({length:3}, (_,i) => ({ w:(ps[i]||ps[ps.length-1]||{}).w||0, r:10, done:false })) });
+  q("[data-addex]", b => b.onclick = () => openPicker("Übung hinzufügen", name => {
+    const tpl = knownExercises().find(k => k.name === name);
+    const src = tpl && tpl.plan;
+    const n = src ? src.sets : 3, reps = src ? src.reps : 10;
+    D.active.exercises.push({ name, unit: unitOf(name), target: n, reps, rest: src ? src.rest : 60,
+      sets: prefillSets(name, n, reps) });
+    save(); closeSheet();
+  }));
+
+  q("[data-unit]", b => b.onclick = () => {
+    const ex = D.active.exercises[+b.dataset.unit];
+    const nu = exUnit(ex) === "stufe" ? "kg" : "stufe";
+    if(!confirm("„" + ex.name + "“ ab jetzt in " + (nu === "stufe" ? "Stufen" : "kg") + " eintragen?\n\nGilt auch für künftige Trainings mit dieser Übung.")) return;
+    ex.unit = nu; setUnit(ex.name, nu);
+    ex.sets.forEach(s => { if(!s.done) s.w = 0; });
     save(); render();
   });
 
