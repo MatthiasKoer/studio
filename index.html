@@ -218,6 +218,22 @@ function load(){
   for(const w of D.history) for(const e of w.exercises||[]) if(!e.unit) e.unit = "kg";
   if(D.active) for(const e of D.active.exercises||[]) if(!e.unit) e.unit = "kg";
   migrate();
+  cleanNames();
+}
+/* Einmalig: Studio-Kürzel aus Übungsnamen entfernen (Verlauf wird zusammengeführt,
+   die Einheit steckt jetzt im Plan) und Tippfehler korrigieren. */
+function cleanNames(){
+  if(D.namesCleaned) return;
+  const map = {};
+  for(const p of D.plans){
+    const m = / – (\S+)$/.exec(p.name || "");
+    if(!m) continue;
+    const suf = " " + m[1];
+    for(const e of p.exercises||[]) if(e.name.endsWith(suf)) map[e.name] = e.name.slice(0, -suf.length).trim();
+  }
+  Object.assign(map, { "Goblet Sqat": "Goblet Squat", "Lat Pulldow": "Lat Pulldown" });
+  for(const [from, to] of Object.entries(map)) renameExercise(from, to);
+  D.namesCleaned = true; save();
 }
 /* Einheit hängt an der Übung im Plan (pro Studio), nicht mehr global am Namen.
    Bestehende Pläne übernehmen einmalig die bisherige globale Einstellung. */
