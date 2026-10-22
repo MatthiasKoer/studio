@@ -217,6 +217,13 @@ function load(){
   /* Ältere Einträge wurden immer in kg erfasst — festschreiben, damit ein späteres Umstellen sie nicht umdeutet */
   for(const w of D.history) for(const e of w.exercises||[]) if(!e.unit) e.unit = "kg";
   if(D.active) for(const e of D.active.exercises||[]) if(!e.unit) e.unit = "kg";
+  migrate();
+}
+/* Einheit hängt an der Übung im Plan (pro Studio), nicht mehr global am Namen.
+   Bestehende Pläne übernehmen einmalig die bisherige globale Einstellung. */
+function migrate(){
+  if(!D.units) D.units = {};
+  for(const p of D.plans||[]) for(const e of p.exercises||[]) if(!e.unit) e.unit = unitOf(e.name);
 }
 function save(){
   try{ localStorage.setItem(KEY, JSON.stringify(D)); }
@@ -305,6 +312,7 @@ function kg(v){
 const UNITS = ["kg","stufe","sek","seite"];
 const unitOf = name => (D.units && D.units[name]) || "kg";
 const exUnit = ex => ex.unit || unitOf(ex.name);
+const peUnit = exUnit; /* Übung im Plan: eigene Einheit, sonst globale Voreinstellung */
 const isWeight = u => u === "kg" || u === "stufe";
 function setUnit(name, u){
   if(u && u !== "kg" && UNITS.includes(u)) D.units[name] = u; else delete D.units[name];
@@ -315,7 +323,7 @@ const fmtSet = (s, u) => u === "sek" ? (s.r||0) + " Sek" : u === "seite" ? (s.r|
 const unitShort = u => ({stufe:"St.", sek:"Sek", seite:"/Seite"})[u] || "kg";
 const unitLong = u => ({stufe:"Stufe", sek:"Sek", seite:"Wdh./Seite"})[u] || "kg";
 const repsLabel = u => u === "sek" ? "Sekunden pro Satz" : u === "seite" ? "Wiederholungen pro Seite" : "Wiederholungen";
-const planLine = e => { const u = unitOf(e.name);
+const planLine = e => { const u = peUnit(e);
   return e.sets + " × " + e.reps + (u === "sek" ? " Sek" : u === "seite" ? " /Seite" : ""); };
 function vol(v){
   if(v >= 1000) return de((v/1000).toFixed(1)) + " t";
@@ -357,10 +365,11 @@ function topReps(ex){ const v = doneSets(ex).map(s => s.r||0); return v.length ?
 const progress = ex => { const u = exUnit(ex);
   return u === "stufe" ? topLevel(ex) : u === "kg" ? e1rm(ex) : topReps(ex); };
 
-/* Sätze vorbelegen mit den Werten vom letzten Mal — nur, wenn die Einheit gleich geblieben ist */
-function prefillSets(name, n, reps){
-  const prev = lastLog(name);
-  const ps = prev && exUnit(prev.ex) === unitOf(name) ? doneSets(prev.ex) : [];
+/* Sätze vorbelegen mit den Werten vom letzten Training in derselben Einheit
+   (Stufen-Studio → letzte Stufen, kg-Studio → letzte kg) */
+function prefillSets(name, n, reps, unit){
+  const prev = lastLog(name, unit || unitOf(name));
+  const ps = prev ? doneSets(prev.ex) : [];
   return Array.from({length: n}, (_,i) => ({ w: (ps[i] || ps[ps.length-1] || {}).w || 0, r: reps, done: false }));
 }
 
@@ -415,10 +424,10 @@ function deleteExercise(name){
   save();
 }
 
-function lastLog(name){
+function lastLog(name, unit){
   const h = D.history.slice().sort((a,b) => b.start - a.start);
   for(const w of h){
-    const m = (w.exercises||[]).find(e => e.name === name && doneSets(e).length);
+    const m = (w.exercises||[]).find(e => e.name === name && doneSets(e).length && (!unit || exUnit(e) === unit));
     if(m) return { ex: m, start: w.start };
   }
   return null;
@@ -633,8 +642,8 @@ function startWorkout(plan){
     start: Date.now(), end: null, exercises: [] };
   if(plan){
     w.exercises = plan.exercises.map(pe => ({
-      name: pe.name, unit: unitOf(pe.name), target: pe.sets, reps: pe.reps, rest: pe.rest,
-      sets: prefillSets(pe.name, pe.sets, pe.reps) }));
+      name: pe.name, unit: peUnit(pe), target: pe.sets, reps: pe.reps, rest: pe.rest,
+      sets: prefillSets(pe.name, pe.sets, pe.reps, peUnit(pe)) }));
   }
   D.active = w; save(); render();
 }
@@ -664,9 +673,9 @@ function viewWorkout(){
 }
 
 function exerciseCard(ex, xi){
-  const prev = lastLog(ex.name);
-  const det = detail(ex.name);
   const u = exUnit(ex);
+  const prev = lastLog(ex.name, u) || lastLog(ex.name);
+  const det = detail(ex.name);
   return `<div class="card">
     <div class="between">
       <b class="grow trunc" style="font-size:17px;font-weight:600">${esc(ex.name)}</b>
@@ -798,7 +807,7 @@ function weeklyVolume(n){
   return out;
 }
 
-let statPick = "";
+let statPick = "", statUnitPick = "";
 function viewStats(){
   if(!D.history.length) return `<div class="wrap"><h1>Statistik</h1>
     <div class="empty"><b>Noch keine Daten</b>
@@ -811,12 +820,20 @@ function viewStats(){
   const names = [...new Set(D.history.flatMap(w => w.exercises.map(e => e.name)))].sort();
   if(!names.includes(statPick)) statPick = names[0] || "";
 
+  /* kg und Stufen sind nicht vergleichbar → eine Kurve je Einheit */
+  const statUnits = [...new Set(D.history.flatMap(w => w.exercises
+    .filter(e => e.name === statPick && progress(e) > 0).map(exUnit)))];
+  if(!statUnits.includes(statUnitPick)){
+    const last = lastLog(statPick);
+    statUnitPick = last && statUnits.includes(exUnit(last.ex)) ? exUnit(last.ex) : (statUnits[0] || unitOf(statPick));
+  }
+  const statUnit = statUnitPick;
+
   const pts = D.history
-    .filter(w => w.exercises.some(e => e.name === statPick && progress(e) > 0))
-    .map(w => ({ t: w.start, v: progress(w.exercises.find(e => e.name === statPick)) }))
+    .filter(w => w.exercises.some(e => e.name === statPick && exUnit(e) === statUnit && progress(e) > 0))
+    .map(w => ({ t: w.start, v: progress(w.exercises.find(e => e.name === statPick && exUnit(e) === statUnit)) }))
     .sort((a,b) => a.t - b.t);
 
-  const statUnit = unitOf(statPick);
   const statStufe = statUnit === "stufe";
   let chart = `<p class="small muted">Mindestens zwei Einheiten mit dieser Übung nötig, damit eine Kurve entsteht.</p>`;
   if(pts.length >= 2){
@@ -865,6 +882,8 @@ function viewStats(){
       <select class="txt" id="statpick" style="margin-top:8px">
         ${names.map(n => `<option ${n===statPick?"selected":""}>${esc(n)}</option>`).join("")}
       </select>
+      ${statUnits.length > 1 ? `<div class="seg" style="margin-top:8px">${statUnits.map(u =>
+        `<button data-statunit="${u}" class="${u===statUnit?"on":""}">${u==="stufe"?"Stufen":unitLong(u)}</button>`).join("")}</div>` : ""}
       ${chart}
     </div>
   </div>`;
@@ -908,21 +927,21 @@ function openPlanSheet(i){
         <button class="mv" data-mv="${j}.-1" ${j===0?"disabled":""} aria-label="nach oben">▲</button>
         <button class="mv" data-mv="${j}.1" ${j===p.exercises.length-1?"disabled":""} aria-label="nach unten">▼</button>
         <span class="grow trunc" style="margin-left:4px">${esc(e.name)}</span>
-        <span class="muted small num">${e.sets} × ${e.reps} · ${unitShort(unitOf(e.name))}</span>
+        <span class="muted small num">${e.sets} × ${e.reps} · ${unitShort(peUnit(e))}</span>
         <span class="muted">›</span></div>`).join("") || '<div class="listitem muted small">Noch keine Übung.</div>'}
     </div>
     <button class="btn ghost" id="addex" style="margin-top:10px">Übung hinzufügen</button>
 
     ${p.exercises.length ? `<label class="lbl">Gewicht für alle Übungen dieses Plans</label>
     <div class="seg"><button id="allkg">in kg</button><button id="allst">in Stufen</button></div>
-    <div class="tiny muted" style="margin-top:5px">Praktisch für ein Studio, in dem die Maschinen nur Stufen haben. Übungen in Sek oder Wdh./Seite bleiben unverändert. Einzelne Übungen kannst du danach noch umstellen.</div>` : ""}
+    <div class="tiny muted" style="margin-top:5px">Gilt nur für diesen Plan — so kann derselbe Plan in einem Studio in kg und im anderen in Stufen laufen. Übungen in Sek oder Wdh./Seite bleiben unverändert. Einzelne Übungen kannst du danach noch umstellen.</div>` : ""}
 
     <label class="lbl">Aufwärmen &amp; Mobilität</label>
     <textarea class="txt" id="pm" rows="5">${esc((p.mobility||[]).join("\n"))}</textarea>
     <div class="tiny muted" style="margin-top:5px">Ein Punkt pro Zeile.</div>
 
     <button class="btn ghost" id="dupplan" style="margin-top:22px">Plan duplizieren</button>
-    <div class="tiny muted" style="margin-top:5px">Für ein zweites Studio — die Übungen können dabei ein Kürzel bekommen, damit die Gewichte getrennt bleiben.</div>
+    <div class="tiny muted" style="margin-top:5px">Für ein zweites Studio. Ohne Kürzel bleibt der Verlauf pro Übung zusammen; die Einheit (kg/Stufen) stellst du in der Kopie einfach oben um. Ein Kürzel trennt die Übungen komplett.</div>
 
     <button class="btn danger" id="delplan" style="margin-top:22px">Plan löschen</button>
   `, () => {
@@ -948,7 +967,7 @@ function openPlanSheet(i){
       const tpl = knownExercises().find(k => k.name === name);
       const src = tpl && tpl.plan;
       unhide(name);
-      p.exercises.push({ id: uid(), name,
+      p.exercises.push({ id: uid(), name, unit: src ? peUnit(src) : unitOf(name),
         sets: src ? src.sets : 3, reps: src ? src.reps : 10, rest: src ? src.rest : 60 });
       save();
       sheetStack.pop(); sheetStack.pop();
@@ -956,7 +975,7 @@ function openPlanSheet(i){
       if(isNew) openExerciseSheet(p, p.exercises.length-1);
     });
     const bulk = u => {
-      p.exercises.forEach(e => { if(isWeight(unitOf(e.name))) setUnit(e.name, u); }); save();
+      p.exercises.forEach(e => { if(isWeight(peUnit(e))) e.unit = u; }); save();
       sheetStack.pop(); openPlanSheet(i);
     };
     const ak = b.querySelector("#allkg"), as = b.querySelector("#allst");
@@ -975,7 +994,7 @@ function openPlanSheet(i){
         mobility: [...(p.mobility||[])],
         exercises: (p.exercises||[]).map(e => ({
           id: uid(),
-          name: s ? e.name + " " + s : e.name,
+          name: s ? e.name + " " + s : e.name, unit: peUnit(e),
           sets: e.sets, reps: e.reps, rest: e.rest
         }))
       };
@@ -1009,16 +1028,16 @@ function openExerciseSheet(plan, j){
 
     <label class="lbl">Angabe in</label>
     <div class="seg seg4">
-      <button data-u="kg" class="${unitOf(e.name)==="kg"?"on":""}">kg</button>
-      <button data-u="stufe" class="${unitOf(e.name)==="stufe"?"on":""}">Stufen</button>
-      <button data-u="sek" class="${unitOf(e.name)==="sek"?"on":""}">Sek</button>
-      <button data-u="seite" class="${unitOf(e.name)==="seite"?"on":""}">Wdh./Seite</button>
+      <button data-u="kg" class="${peUnit(e)==="kg"?"on":""}">kg</button>
+      <button data-u="stufe" class="${peUnit(e)==="stufe"?"on":""}">Stufen</button>
+      <button data-u="sek" class="${peUnit(e)==="sek"?"on":""}">Sek</button>
+      <button data-u="seite" class="${peUnit(e)==="seite"?"on":""}">Wdh./Seite</button>
     </div>
-    <div class="tiny muted" style="margin-top:5px">Sek: Haltezeit mit Countdown im Training, z. B. Plank. Wdh./Seite: ohne Gewicht, z. B. Dead Bugs. Gilt überall, wo diese Übung vorkommt.</div>
+    <div class="tiny muted" style="margin-top:5px">kg/Stufen gelten nur für diesen Plan (pro Studio). Sek (Haltezeit mit Countdown, z. B. Plank) und Wdh./Seite (ohne Gewicht, z. B. Dead Bugs) gelten überall, wo die Übung vorkommt.</div>
 
     <label class="lbl">Sätze</label>
     <input class="txt" id="es" type="number" inputmode="numeric" value="${e.sets}">
-    <label class="lbl" id="erl">${repsLabel(unitOf(e.name))}</label>
+    <label class="lbl" id="erl">${repsLabel(peUnit(e))}</label>
     <input class="txt" id="er" type="number" inputmode="numeric" value="${e.reps}">
     <label class="lbl">Pause in Sekunden</label>
     <input class="txt" id="ep" type="number" inputmode="numeric" step="15" value="${e.rest}">
@@ -1037,7 +1056,13 @@ function openExerciseSheet(plan, j){
     b.querySelector("#ep").oninput = ev => { e.rest = Math.max(0, +ev.target.value||0); save(); };
     b.querySelector("#opendet").onclick = () => openDetailSheet(e.name);
     b.querySelectorAll("[data-u]").forEach(btn => btn.onclick = () => {
-      setUnit(e.name, btn.dataset.u); save();
+      const nu = btn.dataset.u, old = peUnit(e);
+      e.unit = nu;
+      /* Wechsel von/zu Sek bzw. Wdh./Seite betrifft die Übung selbst → in allen Plänen */
+      if(!isWeight(nu) || !isWeight(old))
+        D.plans.forEach(p => (p.exercises||[]).forEach(x => { if(x.name === e.name) x.unit = nu; }));
+      setUnit(e.name, nu); /* Voreinstellung für neue Pläne und freies Training */
+      save();
       b.querySelectorAll("[data-u]").forEach(x => x.classList.toggle("on", x === btn));
       b.querySelector("#erl").textContent = repsLabel(btn.dataset.u);
     });
@@ -1235,7 +1260,7 @@ document.getElementById("jsonpick").onchange = ev => {
       const p = JSON.parse(fr.result);
       if(!p.data || !p.data.plans) throw 0;
       if(!confirm("Alle aktuellen Daten werden ersetzt. Fortfahren?")) return;
-      D = p.data; save();
+      D = p.data; migrate(); save();
       if(p.images) for(const [id, src] of Object.entries(p.images)) await imgPut(id, src);
       alert("Wiederhergestellt.");
       render();
@@ -1315,9 +1340,14 @@ function bind(){
     const ex = D.active.exercises[+b.dataset.unit];
     if(!isWeight(exUnit(ex))){ alert("Die Angabe für diese Übung (" + unitLong(exUnit(ex)) + ") änderst du unter Pläne → Übung."); return; }
     const nu = exUnit(ex) === "stufe" ? "kg" : "stufe";
-    if(!confirm("„" + ex.name + "“ ab jetzt in " + (nu === "stufe" ? "Stufen" : "kg") + " eintragen?\n\nGilt auch für künftige Trainings mit dieser Übung.")) return;
-    ex.unit = nu; setUnit(ex.name, nu);
-    ex.sets.forEach(s => { if(!s.done) s.w = 0; });
+    ex.unit = nu;
+    /* Nur dieser Plan merkt sich die Umstellung — der Plan des anderen Studios bleibt unberührt */
+    const plan = D.active.planId && D.plans.find(p => p.id === D.active.planId);
+    const pe = plan && plan.exercises.find(x => x.name === ex.name);
+    if(pe) pe.unit = nu; else setUnit(ex.name, nu);
+    /* Offene Sätze mit den letzten Werten in der neuen Einheit vorbelegen */
+    const fresh = prefillSets(ex.name, ex.sets.length, ex.reps, nu);
+    ex.sets.forEach((s,i) => { if(!s.done) s.w = fresh[i].w; });
     save(); render();
   });
 
@@ -1335,7 +1365,8 @@ function bind(){
   q("[data-import]", b => b.onclick = () => document.getElementById("jsonpick").click());
 
   const sp = document.getElementById("statpick");
-  if(sp) sp.onchange = () => { statPick = sp.value; render(); };
+  if(sp) sp.onchange = () => { statPick = sp.value; statUnitPick = ""; render(); };
+  q("[data-statunit]", b => b.onclick = () => { statUnitPick = b.dataset.statunit; render(); });
 }
 
 /* ---------- Start ---------- */
