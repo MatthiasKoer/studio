@@ -336,7 +336,7 @@ function syncMeta(j){
     const v = typeof val === "string" ? { text: val } : val;
     const name = localNameFor({ name: key, aliases: v.aliases || [] }) || (planNames.has(key) && knownExercises().some(k => k.name === key) ? key : null);
     if(name){ if(v.cat && !explicit[name]) explicit[name] = v.cat; }
-    else if(!(D.hidden||[]).includes(key)) catalog[key] = { text: v.text || "", cat: v.cat || [], unit: v.unit || "" };
+    else if(!v.mobOnly && !(D.hidden||[]).includes(key)) catalog[key] = { text: v.text || "", cat: v.cat || [], unit: v.unit || "" };
   }
   const rules = Array.isArray(j.catRules) ? j.catRules : [];
   const byRule = name => {
@@ -351,6 +351,13 @@ function syncMeta(j){
   }
   D.repoCats = rc;
   D.catalog = catalog;
+  const idx = {};
+  for(const [key, val] of Object.entries(j.info || {})){
+    const v = typeof val === "string" ? { text: val } : val;
+    for(const n of [key, ...(v.aliases || [])]) idx[normName(n)] = key;
+  }
+  D.infoIndex = idx;
+  D.mobTexts = Object.fromEntries(Object.entries(j.info || {}).filter(([,v]) => v && v.mobOnly).map(([k,v]) => [k, v.text]));
   save();
 }
 /* Was würde sich ändern? Für die Vorschau. */
@@ -835,6 +842,50 @@ function daysSince(){
   return Math.floor((Date.now() - last)/86400000);
 }
 
+/* --- Aufwärmen & Mobilität: jede Zeile antippbar, öffnet die Beschreibung --- */
+const mobKey = line => String(line).split(/ [–-] |:/)[0].replace(/\(.*?\)/g, "").trim();
+function mobResolve(line){
+  const k = mobKey(line), nk = normName(k), idx = D.infoIndex || {};
+  const known = knownExercises().find(x => normName(x.name) === nk);
+  if(known) return { name: known.name, kind: "known" };
+  let key = idx[nk];
+  if(!key) for(const [n, kk] of Object.entries(idx)) if(n.length > 3 && (nk.startsWith(n) || n.startsWith(nk))){ key = kk; break; }
+  if(!key) return { name: k, kind: "none" };
+  if(knownExercises().some(x => x.name === key)) return { name: key, kind: "known" };
+  if((D.catalog || {})[key]) return { name: key, kind: "sug" };
+  if((D.mobTexts || {})[key]) return { name: key, kind: "text" };
+  return { name: k, kind: "none" };
+}
+function mobLine(m, check){
+  return `<div class="between" style="padding:6px 0;border-bottom:1px solid var(--line)">
+    ${check || ""}
+    <span class="grow" data-mob="${esc(m)}" style="cursor:pointer">${esc(m)}</span>
+    <span class="muted" data-mob="${esc(m)}" style="cursor:pointer;font-size:15px">ⓘ</span></div>`;
+}
+function openMobility(line){
+  const r = mobResolve(line);
+  if(r.kind === "known") return openLibItem(r.name);
+  if(r.kind === "sug") return openLibSuggestion(r.name);
+  const t = r.kind === "text" ? D.mobTexts[r.name] : "";
+  openSheet(r.name, `<p class="small" style="white-space:pre-line;margin:0">${esc(t || "Für diese Übung gibt es noch keine Beschreibung. Sag Claude Bescheid, dann kommt sie mit dem nächsten Planstand.")}</p>`);
+}
+let mobOpen = null;
+function mobCard(w){
+  const plan = w.planId && D.plans.find(p => p.id === w.planId);
+  const list = plan && plan.mobility || [];
+  if(!list.length) return "";
+  if(!w.mobDone) w.mobDone = [];
+  const done = w.mobDone.length, all = done >= list.length;
+  const open = mobOpen === null ? !all : mobOpen;
+  return `<div class="card" style="margin-top:12px">
+    <div class="between" data-mobtoggle style="cursor:pointer">
+      <div class="eyebrow">Aufwärmen &amp; Mobilität</div>
+      <span class="tiny muted">${done}/${list.length} ${open ? "▴" : "▾"}</span></div>
+    ${open ? `<div class="small" style="margin-top:6px">${list.map((m,i) =>
+      mobLine(m, `<button data-mobtick="${i}" style="width:24px;height:24px;border-radius:50%;flex:none;font-size:13px;${w.mobDone.includes(i) ? "background:var(--green);color:#fff" : "border:1.5px solid var(--line)"}">${w.mobDone.includes(i) ? "✓" : ""}</button>`)).join("")}</div>` : ""}
+  </div>`;
+}
+
 function viewPicker(){
   const sug = suggestedPlan();
   const ds = daysSince();
@@ -863,8 +914,8 @@ function viewPicker(){
         ${p.mobility && p.mobility.length ? `
         <details style="margin-top:10px">
           <summary class="eyebrow" style="cursor:pointer">Aufwärmen &amp; Mobilität</summary>
-          <div class="small muted" style="margin-top:6px">
-            ${p.mobility.map(m => "· " + esc(m)).join("<br>")}
+          <div class="small" style="margin-top:4px">
+            ${p.mobility.map(m => mobLine(m)).join("")}
           </div>
         </details>` : ""}
         <button class="btn" data-start="${p.id}" style="margin-top:12px">Starten</button>
@@ -876,6 +927,7 @@ function viewPicker(){
 /* --- Training --- */
 
 function startWorkout(plan){
+  mobOpen = null;
   const w = { id: uid(), planId: plan ? plan.id : null,
     title: plan ? plan.name + " – " + plan.subtitle : "Freies Training",
     start: Date.now(), end: null, exercises: [] };
@@ -905,6 +957,7 @@ function viewWorkout(){
            <div class="tiny muted">Volumen</div></div>
     </div>
 
+    ${mobCard(w)}
     ${w.exercises.map((ex,xi) => exerciseCard(ex, xi)).join("")}
 
     <button class="btn ghost" data-addex style="margin-top:12px">Übung hinzufügen</button>
@@ -1795,6 +1848,12 @@ function bind(){
     save(); openPlanSheet(D.plans.length-1);
   });
 
+  q("[data-mob]", el => el.onclick = ev => { ev.preventDefault(); ev.stopPropagation(); openMobility(el.dataset.mob); });
+  q("[data-mobtoggle]", el => el.onclick = () => { const w = D.active, plan = w && D.plans.find(p => p.id === w.planId);
+    const all = w && plan && (w.mobDone||[]).length >= (plan.mobility||[]).length;
+    mobOpen = !(mobOpen === null ? !all : mobOpen); render(); });
+  q("[data-mobtick]", b => b.onclick = () => { const i = +b.dataset.mobtick, w = D.active;
+    w.mobDone = w.mobDone.includes(i) ? w.mobDone.filter(x => x !== i) : [...w.mobDone, i]; save(); render(); });
   q("[data-archive]", b => b.onclick = () => { tab = "lib"; render(); window.scrollTo(0,0); });
   bindLib();
   q("[data-remoteshow]", b => b.onclick = openRemoteSheet);

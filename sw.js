@@ -1,4 +1,4 @@
-const CACHE = "studio-v11";
+const CACHE = "studio-v12";
 const FILES = ["./", "./index.html", "./manifest.json", "./icon.png"];
 
 self.addEventListener("install", e => {

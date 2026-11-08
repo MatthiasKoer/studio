@@ -1,5 +1,5 @@
 {
-  "version": "2026-11-09b",
+  "version": "2026-11-09c",
   "note": "Neu: Reiter „Übungen“ mit Kategorien und Vorschlägen. Dazu FIVE als Haltezeit, Beschreibungen für alle Übungen, S53 hohes Rudern, Katze-Kuh, Chin Tucks, Face Pulls in A.",
   "plans": [
     {
@@ -333,7 +333,7 @@
       "unit": "seite"
     },
     "Hohes Rudern Kabelzug": {
-      "text": "Ersatz für die MTS High Row im S53. Kabel oben oder auf Brusthöhe, sitzend oder kniend. Erst Schulterblätter nach hinten-unten, dann Ellbogen leicht nach außen zur oberen Brust ziehen. Schultern tief, langsam zurück.\n\nWarum: gleiche Zugrichtung wie die High Row – Rhomboiden und mittlerer Trapez gegen vorgerollte Schultern und Kopf-nach-vorn.",
+      "text": "Am besten sitzend am Latzug mit Seil oder breitem Griff (Ersatz für die MTS High Row im S53). Aufrecht sitzen, nur leicht zurücklehnen, Rippen unten. Erst Schulterblätter nach hinten-unten, dann Ellbogen breit etwa auf Schulterhöhe nach hinten ziehen, Seil Richtung obere Brust/Gesicht. Kopf bleibt in Verlängerung, langsam zurück.\n\nWarum: gleiche Zugrichtung wie die High Row – Rhomboiden und mittlerer Trapez gegen vorgerollte Schultern und Kopf-nach-vorn. Nicht verwechseln mit Lat Pulldown (Zug senkrecht nach unten).",
       "cat": [
         "haltung"
       ]
@@ -786,6 +786,37 @@
       "aliases": [
         "Child's Pose",
         "Kinderhaltung"
+      ]
+    },
+    "Beinpendel": {
+      "text": "Seitlich an Wand oder Stange festhalten, aufrecht stehen. Ein Bein locker aus der Hüfte vor und zurück schwingen, Oberkörper und Becken bleiben ruhig – nicht ins Hohlkreuz schwingen. 10× pro Seite.\n\nWarum: bringt das Hüftgelenk in Gang, bevor du belastest; hilft gegen die Steife rechts.",
+      "cat": [
+        "hüfte"
+      ],
+      "unit": "seite",
+      "aliases": [
+        "Beinpendel vor/zurück",
+        "Beinschwingen",
+        "Leg Swings"
+      ]
+    },
+    "Hüftkreisen": {
+      "text": "Im Stand (an der Wand festhalten) oder im Vierfüßlerstand. Mit dem Knie große, langsame Kreise beschreiben, Becken bleibt ruhig. 8× pro Richtung und Seite.\n\nWarum: löst die Steifigkeit im Hüftgelenk vor dem Heben – rechts gern ein paar mehr.",
+      "cat": [
+        "hüfte"
+      ],
+      "unit": "seite",
+      "aliases": [
+        "Hüftkreise",
+        "Hip Circles"
+      ]
+    },
+    "Aufwärmen": {
+      "text": "8–10 Min locker auf Stepper, Laufband oder Rad – leicht ins Schwitzen kommen, noch gut sprechen können. Schultern locker, nicht am Gerät hochziehen.\n\nWarum: wärmt Muskeln und Gelenke vor, die Mobilisation danach geht leichter und sicherer.",
+      "mobOnly": true,
+      "aliases": [
+        "Aufwärmen Cardio",
+        "Warm-up"
       ]
     }
   },
