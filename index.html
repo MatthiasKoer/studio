@@ -180,6 +180,7 @@ label.lbl{display:block;font-size:13px;color:var(--tx2);margin:14px 0 5px}
 /* ---------- Speicher ---------- */
 
 const KEY = "studio.data.v1";
+const APP_VERSION = "2026-11-08 · 18:40";
 let D = null;
 
 const DEFAULTS = () => ({
@@ -922,6 +923,9 @@ function render(){
    „Einheit B“ und „Einheit B – S53“ (oder „Einheit B S53“) gehören zusammen. */
 function planBase(p){
   const n = (p && p.name) || "";
+  /* Einzelner Großbuchstabe als Einheit: „Einheit A“, „A – S53“, „B (S53)“, „S53 B“ */
+  const m = /(?:^|[\s(–-])([A-Z])(?=$|[\s)–-])/.exec(n);
+  if(m) return "einheit" + m[1].toLowerCase();
   const shorter = D.plans.map(x => x.name || "").filter(x => x && x !== n && (n.startsWith(x + " ") || n.startsWith(x + "–")))
     .sort((a,b) => a.length - b.length)[0];
   return normName(shorter || n.split(/ [–-] /)[0]);
@@ -1346,6 +1350,7 @@ function viewPlans(){
       <button class="btn ghost" data-export>Alles exportieren</button>
       <button class="btn ghost" data-import style="margin-top:9px">Aus Datei wiederherstellen</button>
     </div>
+    <p class="tiny muted" style="text-align:center;margin-top:18px">App-Version ${APP_VERSION}${D.repoVersion ? " · Planstand " + esc(D.repoVersion) : ""}</p>
   </div>`;
 }
 
