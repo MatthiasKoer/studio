@@ -1,6 +1,6 @@
 {
-  "version": "2026-11-09e",
-  "note": "Schulterdrücken heißt jetzt „Arnold Press rechts“ (Verlauf bleibt). Dazu: Übungen-Reiter, Beschreibungen, FIVE als Haltezeit, S53 hohes Rudern am Latzug, Katze-Kuh, Chin Tucks, Face Pulls in A.",
+  "version": "2026-11-09f",
+  "note": "Schulterdrücken heißt jetzt „Arnold Press“ (beidarmig, Verlauf bleibt). Dazu: Übungen-Reiter, Beschreibungen, FIVE als Haltezeit, S53 hohes Rudern am Latzug, Katze-Kuh, Chin Tucks, Face Pulls in A.",
   "plans": [
     {
       "name": "Einheit A",
@@ -179,16 +179,17 @@
           }
         },
         {
-          "name": "Arnold Press rechts",
+          "name": "Arnold Press",
           "sets": 2,
           "reps": 10,
           "rest": 90,
           "aliases": [
+            "Arnold Press rechts",
             "Arnold Press einarmig rechts",
             "Schulterdrücken Kurzhantel einarmig rechts",
             "Schulterdrücken KH einarmig rechts",
             "Schulterdrücken Kurzhantel",
-            "Arnold Press"
+            "Arnold Press beidarmig"
           ]
         },
         {
@@ -819,8 +820,8 @@
         "Warm-up"
       ]
     },
-    "Arnold Press rechts": {
-      "text": "Nur rechts (linke Nacken-/SCM-Seite schonen). Sitzend mit Lehne oder stehend. Start: Kurzhantel vor der Schulter, Handfläche zu dir. Beim Hochdrücken die Hand nach außen drehen, oben zeigt die Handfläche nach vorn; auf dem Weg zurück wieder eindrehen. Langsam und kontrolliert.\n\nWorauf achten: Schulter tief, nicht zum Ohr ziehen; unten nicht nach vorn einrollen, Brust offen. Rumpf fest, Rippen unten – kein Hohlkreuz beim Drücken. Oben nicht ganz durchstrecken. Lieber etwas leichter als beim normalen Schulterdrücken.\n\nWarum: die Drehung trainiert die Schulter über einen größeren Bewegungsweg (vordere und seitliche Schulter); einarmig rechts, damit die überspannte linke Seite Ruhe hat.",
+    "Arnold Press": {
+      "text": "Beidarmig, sitzend mit Lehne oder stehend. Start: Kurzhanteln vor den Schultern, Handflächen zu dir. Beim Hochdrücken die Hände nach außen drehen, oben zeigen die Handflächen nach vorn; auf dem Weg zurück wieder eindrehen. Langsam und kontrolliert.\n\nWorauf achten: Schultern tief, nicht zu den Ohren ziehen; unten nicht nach vorn einrollen, Brust offen. Rumpf fest, Rippen unten – kein Hohlkreuz beim Drücken. Oben nicht ganz durchstrecken. Lieber etwas leichter als beim normalen Schulterdrücken.\n\nLinke Seite: Früher lief Schulterdrücken nur rechts, um den SCM links zu schonen. Meldet sich links der Nacken, der Strang am Hals oder das Rauschen, links leichter nehmen oder wieder nur rechts drücken.\n\nWarum: die Drehung trainiert die Schulter über einen größeren Bewegungsweg (vordere und seitliche Schulter).",
       "cat": [
         "drücken",
         "optik"
