@@ -54,6 +54,11 @@ hr{border:0;border-top:1px solid var(--line);margin:12px 0}
 .btn.ghost{background:var(--fill);color:var(--tx)}
 .btn.danger{background:var(--fill);color:var(--red)}
 .chip{background:var(--fill);border-radius:9px;padding:6px 11px;font-size:14px;font-weight:500;display:inline-block}
+.chip.on{background:var(--blue);color:#fff}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chips.scroll{flex-wrap:nowrap;overflow-x:auto;margin:0 -16px;padding:0 16px 4px;-webkit-overflow-scrolling:touch}
+.chips.scroll .chip{flex:none}
+.tag{font-size:11px;color:var(--tx2);background:var(--fill);border-radius:6px;padding:2px 6px;margin-right:4px;display:inline-block;margin-top:3px}
 .pill{background:var(--blue);color:#fff;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600}
 
 .field{background:var(--fill);border:1.5px solid transparent;border-radius:10px;padding:9px 8px;text-align:right;font-size:17px;font-weight:500;font-variant-numeric:tabular-nums;width:100%;-webkit-appearance:none;appearance:none}
@@ -214,6 +219,9 @@ function load(){
   if(!D.library) D.library = {};
   if(!D.units) D.units = {};
   if(!D.hidden) D.hidden = [];
+  if(!D.cats) D.cats = {};
+  if(!D.repoCats) D.repoCats = {};
+  if(!D.catalog) D.catalog = {};
   /* Ältere Einträge wurden immer in kg erfasst — festschreiben, damit ein späteres Umstellen sie nicht umdeutet */
   for(const w of D.history) for(const e of w.exercises||[]) if(!e.unit) e.unit = "kg";
   if(D.active) for(const e of D.active.exercises||[]) if(!e.unit) e.unit = "kg";
@@ -362,6 +370,17 @@ function applyRemote(j){
   for(const t of infoTargets(j)){
     D.library[t.name] = { text: t.text, images: detail(t.name).images || [] };
     D.repoInfo[t.name] = t.text;
+  }
+  /* Kategorien und Vorschläge: Übungen, die es lokal gibt, bekommen die Kategorien aus dem Repo
+     (eigene Zuordnung geht vor); alle anderen landen als Vorschlag im Übungs-Reiter. */
+  if(Array.isArray(j.categories)) D.catDefs = j.categories;
+  const planNames = new Set(allRemoteEx(j).map(e => e.name));
+  D.catalog = {};
+  for(const [key, val] of Object.entries(j.info || {})){
+    const v = typeof val === "string" ? { text: val } : val;
+    const name = planNames.has(key) ? key : localNameFor({ name: key, aliases: v.aliases || [] });
+    if(name){ if(v.cat) D.repoCats[name] = v.cat; }
+    else if(!(D.hidden||[]).includes(key)) D.catalog[key] = { text: v.text || "", cat: v.cat || [], unit: v.unit || "" };
   }
   D.repoVersion = j.version;
   delete D.repoSkipped;
@@ -560,6 +579,7 @@ function knownExercises(){
   for(const w of D.history) for(const e of w.exercises||[]){ const o = add(e.name, w.start); if(o) o.logs++; }
   Object.keys(D.library).forEach(n => add(n));
   Object.keys(D.units).forEach(n => add(n));
+  Object.keys(D.cats || {}).forEach(n => add(n));
   return [...m.values()].sort((a,b) => a.name.localeCompare(b.name, "de"));
 }
 /* Eine gelöschte Übung taucht wieder auf, sobald man sie erneut verwendet */
@@ -582,6 +602,7 @@ function renameExercise(from, to){
     delete D.library[from];
   }
   if(D.units[from]){ if(!D.units[to]) D.units[to] = D.units[from]; delete D.units[from]; }
+  for(const c of [D.cats, D.repoCats]) if(c && c[from]){ if(!c[to]) c[to] = c[from]; delete c[from]; }
   unhide(to);
   D.hidden = (D.hidden||[]).filter(n => n !== from);
   if(statPick === from) statPick = to;
@@ -595,6 +616,7 @@ function deleteExercise(name){
   if(det) det.images.forEach(id => imgDel(id));
   delete D.library[name];
   delete D.units[name];
+  if(D.cats) delete D.cats[name];
   if(D.history.some(w => (w.exercises||[]).some(e => e.name === name))){
     if(!D.hidden.includes(name)) D.hidden.push(name);
   }
@@ -733,7 +755,8 @@ const TABS = [
   { id:"train", label:"Training", icon:'<path d="M4 9v6M20 9v6M7 6v12M17 6v12M7 12h10"/>' },
   { id:"hist",  label:"Verlauf",  icon:'<path d="M4 6h16M4 12h16M4 18h10"/>' },
   { id:"stats", label:"Statistik",icon:'<path d="M4 19V5M4 19h16M8 15l3-4 3 3 5-7"/>' },
-  { id:"plans", label:"Pläne",    icon:'<path d="M4 7h16v13H4zM7 4h10"/>' }
+  { id:"plans", label:"Pläne",    icon:'<path d="M4 7h16v13H4zM7 4h10"/>' },
+  { id:"lib",   label:"Übungen",  icon:'<path d="M5 4h10a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3zM5 17a3 3 0 0 1 3-3h10"/>' }
 ];
 function paintTabs(){
   document.getElementById("tabbar").innerHTML = TABS.map(t =>
@@ -751,6 +774,7 @@ function render(){
   if(tab === "train") app.innerHTML = D.active ? viewWorkout() : viewPicker();
   else if(tab === "hist") app.innerHTML = viewHistory();
   else if(tab === "stats") app.innerHTML = viewStats();
+  else if(tab === "lib") app.innerHTML = viewLib();
   else app.innerHTML = viewPlans();
   bind();
   if(D.active) hydrateThumbs();
@@ -1079,7 +1103,7 @@ function viewPlans(){
         <span class="muted">›</span></div>`).join("")}
     </div>
     <button class="btn ghost" data-newplan style="margin-top:12px">Plan hinzufügen</button>
-    <button class="btn ghost" data-archive style="margin-top:9px">Übungsarchiv verwalten</button>
+    <button class="btn ghost" data-archive style="margin-top:9px">Übungsarchiv</button>
 
     <div class="card" style="margin-top:22px">
       <div class="eyebrow">Daten sichern</div>
@@ -1273,7 +1297,7 @@ function openPicker(title, onPick){
       b.querySelector("#plist").innerHTML = hits.map(k => `
         <div class="listitem between" data-pick="${esc(k.name)}" style="cursor:pointer">
           <div class="grow" style="min-width:0"><div class="trunc">${esc(k.name)}</div>
-            <div class="tiny muted">${unitLong(unitOf(k.name))}${k.last ? " · zuletzt " + dayShort(k.last) : ""}</div></div>
+            <div class="tiny muted">${unitLong(unitOf(k.name))}${k.last ? " · zuletzt " + dayShort(k.last) : ""}${catsOf(k.name).length ? " · " + catsOf(k.name).map(catLabel).map(esc).join(", ") : ""}</div></div>
           <span class="muted">+</span></div>`).join("")
         || `<div class="listitem muted small">${all.length ? "Keine passende Übung." : "Noch keine Übungen im Archiv."}</div>`;
       b.querySelectorAll("[data-pick]").forEach(el => el.onclick = () => onPick(el.dataset.pick, false));
@@ -1304,6 +1328,7 @@ function openArchiveSheet(){
 }
 
 function reopenArchive(){
+  if(tab === "lib"){ sheetStack = []; document.getElementById("sheet").classList.remove("show"); render(); return; }
   sheetStack.pop(); sheetStack.pop();
   openArchiveSheet();
 }
@@ -1346,6 +1371,192 @@ function openArchiveItem(name){
       if(!confirm("„" + name + "“ wirklich aus dem Archiv löschen?")) return;
       deleteExercise(name);
       reopenArchive();
+    };
+  });
+}
+
+/* ---------- Übungen (Archiv nach Kategorien) ---------- */
+
+const DEFAULT_CATS = [
+  { id:"haltung",  label:"Haltung & Schulterblatt", hint:"Gegen vorgerollte Schultern und Kopf-nach-vorn" },
+  { id:"kette",    label:"Hintere Kette & Gesäß",   hint:"Gegen die steife rechte hintere Seite" },
+  { id:"rumpf",    label:"Rumpf & Becken",          hint:"Gegen das Hohlkreuz, ohne Druck auf den Bauch" },
+  { id:"hüfte",    label:"Hüfte & Mobilität",       hint:"Gegen die Hüftsteife" },
+  { id:"dehnen",   label:"Dehnen & Nacken",         hint:"Entlastung für SCM und Nacken" },
+  { id:"beine",    label:"Beine",                   hint:"" },
+  { id:"drücken",  label:"Brust & Drücken",         hint:"" },
+  { id:"optik",    label:"Arme & Schulter-Optik",   hint:"" },
+  { id:"pause",    label:"Pausiert / Vorsicht",     hint:"Gerade nicht empfohlen – Grund steht in der Beschreibung" }
+];
+const catDefs = () => (D.catDefs && D.catDefs.length ? D.catDefs : DEFAULT_CATS);
+const catLabel = id => (catDefs().find(c => c.id === id) || { label: id }).label;
+const catsOf = name => (D.cats && D.cats[name]) || (D.repoCats && D.repoCats[name]) || [];
+let libQ = "", libCat = "";
+
+function libItems(){
+  const known = knownExercises();
+  const ql = libQ.trim().toLowerCase();
+  const match = (name, cats) => (!ql || name.toLowerCase().includes(ql)) && (!libCat || (libCat === "_none" ? !cats.length : cats.includes(libCat)));
+  const own = known.map(k => ({ ...k, cats: catsOf(k.name) })).filter(k => match(k.name, k.cats));
+  const knownSet = new Set(known.map(k => k.name));
+  const sug = Object.entries(D.catalog || {}).filter(([n]) => !knownSet.has(n))
+    .map(([n, v]) => ({ name: n, cats: v.cat || [] })).filter(k => match(k.name, k.cats))
+    .filter(k => libCat === "pause" || k.cats[0] !== "pause")
+    .sort((a,b) => a.name.localeCompare(b.name, "de"));
+  return { own, sug };
+}
+function libRow(k, sug, hide){
+  const tags = k.cats.filter(c => c !== libCat && c !== hide).map(c => `<span class="tag">${esc(catLabel(c))}</span>`).join("");
+  const meta = sug ? "" : `<div class="tiny muted">${k.plans ? (k.plans === 1 ? "in 1 Plan" : "in " + k.plans + " Plänen") : "in keinem Plan"}${k.logs ? " · " + k.logs + "× trainiert" : ""}</div>`;
+  return `<div class="listitem between" ${sug ? `data-libsug="${esc(k.name)}"` : `data-libex="${esc(k.name)}"`} style="cursor:pointer">
+    <div class="grow"><div class="trunc">${esc(k.name)}</div>${meta}${tags ? `<div>${tags}</div>` : ""}</div>
+    <span class="muted">${sug ? "+" : "›"}</span></div>`;
+}
+function libListHTML(){
+  const { own, sug } = libItems();
+  let html = "";
+  if(libCat){
+    html += `<div class="card" style="padding:4px 14px">${own.map(k => libRow(k)).join("") || '<div class="listitem muted small">Noch keine eigene Übung in dieser Kategorie.</div>'}</div>`;
+  } else {
+    const groups = catDefs().map(c => ({ c, items: own.filter(k => (k.cats[0] || "") === c.id) }));
+    const none = own.filter(k => !k.cats.length || !catDefs().some(c => c.id === k.cats[0]));
+    for(const g of groups) if(g.items.length)
+      html += `<div class="eyebrow" style="margin:16px 0 6px">${esc(g.c.label)}</div><div class="card" style="padding:4px 14px">${g.items.map(k => libRow(k, false, g.c.id)).join("")}</div>`;
+    if(none.length) html += `<div class="eyebrow" style="margin:16px 0 6px">Ohne Kategorie</div><div class="card" style="padding:4px 14px">${none.map(k => libRow(k)).join("")}</div>`;
+    if(!own.length) html += `<div class="card muted small">Keine passende Übung.</div>`;
+  }
+  if(sug.length){
+    const body = `<div class="card" style="padding:4px 14px">${sug.map(k => libRow(k, true)).join("")}</div>`;
+    html += libCat || libQ.trim() ? `<div class="eyebrow" style="margin:22px 0 6px">Vorschläge für dich</div>${body}`
+      : `<details style="margin-top:22px"><summary class="eyebrow" style="cursor:pointer">Vorschläge für dich (${sug.length}) – antippen zum Aufklappen</summary><div style="margin-top:6px">${body}</div></details>`;
+  }
+  return html;
+}
+function viewLib(){
+  const def = libCat && catDefs().find(c => c.id === libCat);
+  return `<div class="wrap"><h1>Übungen</h1>
+    <input class="txt" id="libq" placeholder="Suchen" value="${esc(libQ)}" autocomplete="off">
+    <div class="chips scroll" style="margin-top:10px">
+      <button class="chip ${!libCat ? "on" : ""}" data-libcat="">Alle</button>
+      ${catDefs().map(c => `<button class="chip ${libCat === c.id ? "on" : ""}" data-libcat="${esc(c.id)}">${esc(c.label)}</button>`).join("")}
+    </div>
+    ${def && def.hint ? `<p class="small muted" style="margin:10px 0 0">${esc(def.hint)}</p>` : ""}
+    <div id="liblist">${libListHTML()}</div>
+    <button class="btn" data-libnew style="margin-top:18px">Übung hinzufügen</button>
+    <p class="tiny muted" style="margin-top:8px">Vorschläge kommen mit neuen Planständen dazu. Eine Übung kann mehreren Kategorien angehören; die erste bestimmt die Gruppe.</p>
+  </div>`;
+}
+function bindLib(){
+  const qi = document.getElementById("libq");
+  if(!qi) return;
+  const paintList = () => { document.getElementById("liblist").innerHTML = libListHTML(); bindLibRows(); };
+  qi.oninput = () => { libQ = qi.value; paintList(); };
+  document.querySelectorAll("[data-libcat]").forEach(b => b.onclick = () => { libCat = b.dataset.libcat; render(); });
+  document.querySelectorAll("[data-libnew]").forEach(b => b.onclick = () => openLibEdit(null));
+  bindLibRows();
+}
+function bindLibRows(){
+  document.querySelectorAll("[data-libex]").forEach(el => el.onclick = () => openLibItem(el.dataset.libex));
+  document.querySelectorAll("[data-libsug]").forEach(el => el.onclick = () => openLibSuggestion(el.dataset.libsug));
+}
+function catChips(sel){
+  return `<div class="chips" id="lcats">${catDefs().map(c =>
+    `<button class="chip ${sel.includes(c.id) ? "on" : ""}" data-lc="${esc(c.id)}">${esc(c.label)}</button>`).join("")}</div>`;
+}
+function readChips(b){ return [...b.querySelectorAll("[data-lc].on")].map(x => x.dataset.lc); }
+function wireChips(b, onChange){
+  b.querySelectorAll("[data-lc]").forEach(x => x.onclick = () => { x.classList.toggle("on"); if(onChange) onChange(readChips(b)); });
+}
+/* Detail einer eigenen Übung */
+function openLibItem(name){
+  const det = detail(name);
+  const k = knownExercises().find(x => x.name === name) || { plans: 0, logs: 0 };
+  const inPlans = D.plans.filter(p => (p.exercises||[]).some(e => e.name === name)).map(p => p.name);
+  openSheet(name, `
+    <label class="lbl">Wofür gut</label>
+    ${catChips(catsOf(name))}
+    <label class="lbl">Beschreibung</label>
+    <textarea class="txt" id="lt" rows="7" placeholder="Ausführung, warum sie dir hilft, Einstellungen am Gerät …">${esc(det.text)}</textarea>
+    <button class="btn ghost" id="limg" style="margin-top:10px">Bilder ${det.images.length ? "(" + det.images.length + ")" : "hinzufügen"}</button>
+    <label class="lbl">Angabe</label>
+    <div class="chips">${UNITS.map(u => `<button class="chip ${unitOf(name) === u ? "on" : ""}" data-lu="${u}">${unitLong(u)}</button>`).join("")}</div>
+    <div class="tiny muted" style="margin-top:5px">Voreinstellung für neue Pläne. In bestehenden Plänen änderst du sie unter Pläne → Übung.</div>
+    <label class="lbl">In Plan aufnehmen</label>
+    <div class="small muted" style="margin-bottom:8px">${inPlans.length ? "Steht in: " + inPlans.map(esc).join(", ") : "Steht in keinem Plan."}</div>
+    ${D.plans.length ? `<select class="txt" id="lplan"><option value="">Plan wählen …</option>
+      ${D.plans.filter(p => !inPlans.includes(p.name)).map(p => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join("")}</select>
+    <button class="btn ghost" id="lpadd" style="margin-top:10px">Zum Plan hinzufügen</button>` : ""}
+    <button class="btn ghost" id="lmanage" style="margin-top:22px">Umbenennen, zusammenführen, löschen</button>
+    <div class="tiny muted" style="margin-top:5px">${k.logs ? k.logs + "× im Verlauf." : "Noch nicht trainiert."}</div>
+  `, () => {
+    const b = document.getElementById("sheetbody");
+    wireChips(b, cats => { D.cats[name] = cats; save(); });
+    b.querySelector("#lt").oninput = ev => { const d = detail(name); d.text = ev.target.value; setDetail(name, {...d}); };
+    b.querySelector("#limg").onclick = () => openDetailSheet(name);
+    b.querySelectorAll("[data-lu]").forEach(x => x.onclick = () => {
+      setUnit(name, x.dataset.lu); if(!D.cats[name]) D.cats[name] = catsOf(name); save();
+      b.querySelectorAll("[data-lu]").forEach(y => y.classList.toggle("on", y === x));
+    });
+    const pa = b.querySelector("#lpadd");
+    if(pa) pa.onclick = () => {
+      const p = D.plans.find(x => x.id === b.querySelector("#lplan").value);
+      if(!p) return;
+      const u = unitOf(name);
+      const w = (p.exercises||[]).filter(e => isWeight(e.unit));
+      const pu = isWeight(u) && w.length && w.filter(e => e.unit === "stufe").length > w.length/2 ? "stufe" : u;
+      p.exercises.push({ id: uid(), name, sets: u === "sek" ? 2 : 3, reps: u === "sek" ? 30 : 10, rest: 60, unit: pu });
+      unhide(name); save();
+      alert("„" + name + "“ steht jetzt am Ende von „" + p.name + "“. Sätze und Wiederholungen kannst du unter Pläne anpassen.");
+      sheetStack.pop(); openLibItem(name);
+    };
+    b.querySelector("#lmanage").onclick = () => openArchiveItem(name);
+  });
+}
+/* Neue eigene Übung */
+function openLibEdit(){
+  openSheet("Übung hinzufügen", `
+    <label class="lbl">Name</label>
+    <input class="txt" id="ln" placeholder="z. B. Bird Dog" autocomplete="off">
+    <label class="lbl">Wofür gut</label>
+    ${catChips(libCat && libCat !== "_none" ? [libCat] : [])}
+    <label class="lbl">Angabe</label>
+    <div class="chips">${UNITS.map((u,i) => `<button class="chip ${i === 0 ? "on" : ""}" data-lu="${u}">${unitLong(u)}</button>`).join("")}</div>
+    <label class="lbl">Beschreibung</label>
+    <textarea class="txt" id="lt" rows="6" placeholder="Ausführung, warum sie dir hilft …"></textarea>
+    <button class="btn" id="lsave" style="margin-top:16px">Speichern</button>
+  `, () => {
+    const b = document.getElementById("sheetbody");
+    wireChips(b);
+    b.querySelectorAll("[data-lu]").forEach(x => x.onclick = () => b.querySelectorAll("[data-lu]").forEach(y => y.classList.toggle("on", y === x)));
+    b.querySelector("#lsave").onclick = () => {
+      const name = b.querySelector("#ln").value.trim();
+      if(!name){ alert("Bitte einen Namen eingeben."); return; }
+      if(knownExercises().some(k => k.name.toLowerCase() === name.toLowerCase())){ alert("„" + name + "“ gibt es schon im Archiv."); return; }
+      D.cats[name] = readChips(b);
+      const u = (b.querySelector("[data-lu].on") || {}).dataset.lu || "kg";
+      setUnit(name, u);
+      const t = b.querySelector("#lt").value;
+      if(t.trim()) D.library[name] = { text: t, images: [] };
+      unhide(name); save();
+      sheetStack.pop(); openLibItem(name);
+    };
+  });
+}
+/* Vorschlag aus dem Repo */
+function openLibSuggestion(name){
+  const v = (D.catalog || {})[name]; if(!v) return;
+  openSheet(name, `
+    <div>${(v.cat||[]).map(c => `<span class="tag">${esc(catLabel(c))}</span>`).join("")}</div>
+    <p class="small" style="white-space:pre-line;margin:12px 0 0">${esc(v.text)}</p>
+    <button class="btn" id="lsadd" style="margin-top:18px">Ins Archiv übernehmen</button>
+    <div class="tiny muted" style="margin-top:6px">Danach kannst du sie einem Plan hinzufügen oder im Training über „Übung hinzufügen“ einbauen.</div>
+  `, () => {
+    document.getElementById("lsadd").onclick = () => {
+      D.cats[name] = (v.cat || []).slice();
+      if(v.unit) setUnit(name, v.unit);
+      if(v.text){ D.library[name] = { text: v.text, images: [] }; if(!D.repoInfo) D.repoInfo = {}; D.repoInfo[name] = v.text; }
+      unhide(name); save();
+      sheetStack.pop(); openLibItem(name);
     };
   });
 }
@@ -1539,7 +1750,8 @@ function bind(){
     save(); openPlanSheet(D.plans.length-1);
   });
 
-  q("[data-archive]", b => b.onclick = openArchiveSheet);
+  q("[data-archive]", b => b.onclick = () => { tab = "lib"; render(); window.scrollTo(0,0); });
+  bindLib();
   q("[data-remoteshow]", b => b.onclick = openRemoteSheet);
   q("[data-export]", b => b.onclick = exportAll);
   q("[data-import]", b => b.onclick = () => document.getElementById("jsonpick").click());

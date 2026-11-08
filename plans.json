@@ -1,6 +1,6 @@
 {
-  "version": "2026-11-08d",
-  "note": "FIVE als Haltezeit (3 × 30 Sek), Beschreibungen für alle Übungen ergänzt. Dazu: S53 hohes Rudern statt MTS High Row, Katze-Kuh, Chin Tucks, Face Pulls in A.",
+  "version": "2026-11-09",
+  "note": "Neu: Reiter „Übungen“ mit Kategorien und Vorschlägen. Dazu FIVE als Haltezeit, Beschreibungen für alle Übungen, S53 hohes Rudern, Katze-Kuh, Chin Tucks, Face Pulls in A.",
   "plans": [
     {
       "name": "Einheit A",
@@ -230,24 +230,122 @@
     }
   ],
   "info": {
-    "Rumänisches Kreuzheben Langhantel": "Rücken neutral, Becken „unter dir“, Hüfte nach hinten schieben. Oben endet die Bewegung durch Gesäßanspannung, nicht durch Zurücklehnen (Hohlkreuz). Nur so tief, wie die Hüfte sauber mitgeht. Meldet sich der Rücken mittig: Gewicht runter.\n\nWarum: kräftigt die steife hintere Kette, ohne die Lendenwirbelsäule zu überstrecken.",
-    "Goblet Squat": "Aufrecht, Knie folgen den Zehen, Rippen unten. Nur so tief, wie das Becken nicht abkippt.\n\nWarum: Beinkraft mit aufrechtem Oberkörper, schult die Beckenkontrolle.",
-    "Einbeiniges Kreuzheben rechts": "Linke Hand zur Stabilisierung an die Wand. Becken bleibt waagerecht, nicht aufdrehen.\n\nWarum: gezielt für die steife rechte hintere Kette und Hüfte (asymmetrische Phase).",
-    "Hip Thrust": "Oben 2 Sek halten, Gesäß fest, Rippen unten – kein Hohlkreuz in der Endposition. Option: 1–2 Sätze einbeinig rechts.\n\nWarum: kräftigt das Gesäß und richtet das Becken auf – direkt gegen das Hohlkreuz.",
-    "MTS High Row": "Erst Schulterblätter nach hinten-unten, dann Ellbogen ziehen. Schultern tief, langsam zurückführen.\n\nWarum: trainiert Rhomboiden und mittleren Trapez – Gegenspieler zu vorgerollten Schultern und Kopf-nach-vorn.",
-    "Kabelzug Rudern beidarmig": "Schulterblätter zuerst, Ellbogen eng zur Hüfte, langsam zurück.\n\nWarum: Haltung im oberen Rücken, entlastet Nacken/SCM.",
-    "Dead Bug": "Unterer Rücken bleibt am Boden, Kopf abgelegt. Gegenarm und -bein langsam strecken, dabei ausatmen.\n\nWarum: Rumpfstabilität ohne Hohlkreuz und ohne Druck auf den Bauch (Reflux); der abgelegte Kopf schont den SCM.",
-    "Face Pull": "Seil auf Gesichtshöhe, Ellbogen hoch und nach hinten, Schulterblätter zusammen. Schultern tief, langsam zurück.\n\nWarum: Gegenspieler zu vorgerollten Schultern und Kopf-nach-vorn – entlastet den überspannten SCM.",
-    "Brustpresse": "Schulterblätter zurück und tief, Schultern rollen nicht nach vorn. Alternativ Schrägbank Kurzhantel.\n\nWarum: Druckkraft, ohne die Schultern in die Vorhaltung zu ziehen.",
-    "Kabelzug Rudern einarmig links": "Direkt im Wechsel mit rechts, ohne Pause dazwischen. Schulterblatt zuerst, Schulter tief.\n\nWarum: links mehr Volumen (12 statt 10) als Ausgleich der Asymmetrie.",
-    "Kabelzug Rudern einarmig rechts": "Direkt im Wechsel mit links. Schulterblatt zuerst, Schulter tief.\n\nWarum: Teil des asymmetrischen Ruderns – rechts etwas weniger Volumen.",
-    "Schulterdrücken Kurzhantel einarmig rechts": "Nur rechts. Rumpf fest, Rippen unten, kein Hohlkreuz beim Drücken.\n\nWarum: schont die linke Nacken-/SCM-Seite.",
-    "Seitheben Kabelzug beidseits": "Supersatz mit Face Pull: direkt danach Face Pull, dann Pause. Max. bis Schulterhöhe, Schulter nicht hochziehen.\n\nWarum: Schulterbreite für die Optik, ohne Nackenspannung.",
-    "Bizeps Kurzhantel": "Supersatz mit Trizeps: direkt danach Trizeps, dann Pause. Ellbogen fixiert, Schultern tief.",
-    "Trizeps Kabelzug": "Zweiter Teil des Supersatzes mit Bizeps. Ellbogen eng, Schultern tief.",
-    "Pallof Press": "Seitlich zum Kabel, Griff vor der Brust nach vorn drücken, 2 Sek halten, Rumpf dreht nicht mit. Gesäß fest, Rippen unten.\n\nWarum: Stabilität gegen Rotation – passt zum diagonalen Muster; kein Hohlkreuz, kein Druck auf den Bauch.",
-    "Hohes Rudern Kabelzug": "Ersatz für die MTS High Row im S53. Kabel oben oder auf Brusthöhe, sitzend oder kniend. Erst Schulterblätter nach hinten-unten, dann Ellbogen leicht nach außen zur oberen Brust ziehen. Schultern tief, langsam zurück.\n\nWarum: gleiche Zugrichtung wie die High Row – Rhomboiden und mittlerer Trapez gegen vorgerollte Schultern und Kopf-nach-vorn.",
-    "FIVE hintere Kette": "Gehaltene Positionen am FIVE-Gerät, je 20–45 Sek (Countdown in der App). Ruhig weiteratmen, nicht in den Schmerz ziehen. Becken neutral, Rippen unten – beim Vorlehnen nicht ins Hohlkreuz durchhängen.\n\nWarum: dehnt hintere Kette und Hüfte unter Kontrolle, ohne Last auf der Wirbelsäule – gegen die rechtsseitige Steifheit.",
+    "Rumänisches Kreuzheben Langhantel": {
+      "text": "Rücken neutral, Becken „unter dir“, Hüfte nach hinten schieben. Oben endet die Bewegung durch Gesäßanspannung, nicht durch Zurücklehnen (Hohlkreuz). Nur so tief, wie die Hüfte sauber mitgeht. Meldet sich der Rücken mittig: Gewicht runter.\n\nWarum: kräftigt die steife hintere Kette, ohne die Lendenwirbelsäule zu überstrecken.",
+      "cat": [
+        "kette"
+      ]
+    },
+    "Goblet Squat": {
+      "text": "Aufrecht, Knie folgen den Zehen, Rippen unten. Nur so tief, wie das Becken nicht abkippt.\n\nWarum: Beinkraft mit aufrechtem Oberkörper, schult die Beckenkontrolle.",
+      "cat": [
+        "beine",
+        "rumpf"
+      ]
+    },
+    "Einbeiniges Kreuzheben rechts": {
+      "text": "Linke Hand zur Stabilisierung an die Wand. Becken bleibt waagerecht, nicht aufdrehen.\n\nWarum: gezielt für die steife rechte hintere Kette und Hüfte (asymmetrische Phase).",
+      "cat": [
+        "kette",
+        "hüfte"
+      ]
+    },
+    "Hip Thrust": {
+      "text": "Oben 2 Sek halten, Gesäß fest, Rippen unten – kein Hohlkreuz in der Endposition. Option: 1–2 Sätze einbeinig rechts.\n\nWarum: kräftigt das Gesäß und richtet das Becken auf – direkt gegen das Hohlkreuz.",
+      "cat": [
+        "kette",
+        "rumpf"
+      ]
+    },
+    "MTS High Row": {
+      "text": "Erst Schulterblätter nach hinten-unten, dann Ellbogen ziehen. Schultern tief, langsam zurückführen.\n\nWarum: trainiert Rhomboiden und mittleren Trapez – Gegenspieler zu vorgerollten Schultern und Kopf-nach-vorn.",
+      "cat": [
+        "haltung"
+      ]
+    },
+    "Kabelzug Rudern beidarmig": {
+      "text": "Schulterblätter zuerst, Ellbogen eng zur Hüfte, langsam zurück.\n\nWarum: Haltung im oberen Rücken, entlastet Nacken/SCM.",
+      "cat": [
+        "haltung"
+      ]
+    },
+    "Dead Bug": {
+      "text": "Unterer Rücken bleibt am Boden, Kopf abgelegt. Gegenarm und -bein langsam strecken, dabei ausatmen.\n\nWarum: Rumpfstabilität ohne Hohlkreuz und ohne Druck auf den Bauch (Reflux); der abgelegte Kopf schont den SCM.",
+      "cat": [
+        "rumpf"
+      ],
+      "unit": "seite"
+    },
+    "Face Pull": {
+      "text": "Seil auf Gesichtshöhe, Ellbogen hoch und nach hinten, Schulterblätter zusammen. Schultern tief, langsam zurück.\n\nWarum: Gegenspieler zu vorgerollten Schultern und Kopf-nach-vorn – entlastet den überspannten SCM.",
+      "cat": [
+        "haltung"
+      ]
+    },
+    "Brustpresse": {
+      "text": "Schulterblätter zurück und tief, Schultern rollen nicht nach vorn. Alternativ Schrägbank Kurzhantel.\n\nWarum: Druckkraft, ohne die Schultern in die Vorhaltung zu ziehen.",
+      "cat": [
+        "drücken"
+      ]
+    },
+    "Kabelzug Rudern einarmig links": {
+      "text": "Direkt im Wechsel mit rechts, ohne Pause dazwischen. Schulterblatt zuerst, Schulter tief.\n\nWarum: links mehr Volumen (12 statt 10) als Ausgleich der Asymmetrie.",
+      "cat": [
+        "haltung"
+      ]
+    },
+    "Kabelzug Rudern einarmig rechts": {
+      "text": "Direkt im Wechsel mit links. Schulterblatt zuerst, Schulter tief.\n\nWarum: Teil des asymmetrischen Ruderns – rechts etwas weniger Volumen.",
+      "cat": [
+        "haltung"
+      ]
+    },
+    "Schulterdrücken Kurzhantel einarmig rechts": {
+      "text": "Nur rechts. Rumpf fest, Rippen unten, kein Hohlkreuz beim Drücken.\n\nWarum: schont die linke Nacken-/SCM-Seite.",
+      "cat": [
+        "drücken",
+        "optik"
+      ]
+    },
+    "Seitheben Kabelzug beidseits": {
+      "text": "Supersatz mit Face Pull: direkt danach Face Pull, dann Pause. Max. bis Schulterhöhe, Schulter nicht hochziehen.\n\nWarum: Schulterbreite für die Optik, ohne Nackenspannung.",
+      "cat": [
+        "optik"
+      ]
+    },
+    "Bizeps Kurzhantel": {
+      "text": "Supersatz mit Trizeps: direkt danach Trizeps, dann Pause. Ellbogen fixiert, Schultern tief.",
+      "cat": [
+        "optik"
+      ]
+    },
+    "Trizeps Kabelzug": {
+      "text": "Zweiter Teil des Supersatzes mit Bizeps. Ellbogen eng, Schultern tief.",
+      "cat": [
+        "optik"
+      ]
+    },
+    "Pallof Press": {
+      "text": "Seitlich zum Kabel, Griff vor der Brust nach vorn drücken, 2 Sek halten, Rumpf dreht nicht mit. Gesäß fest, Rippen unten.\n\nWarum: Stabilität gegen Rotation – passt zum diagonalen Muster; kein Hohlkreuz, kein Druck auf den Bauch.",
+      "cat": [
+        "rumpf"
+      ],
+      "unit": "seite"
+    },
+    "Hohes Rudern Kabelzug": {
+      "text": "Ersatz für die MTS High Row im S53. Kabel oben oder auf Brusthöhe, sitzend oder kniend. Erst Schulterblätter nach hinten-unten, dann Ellbogen leicht nach außen zur oberen Brust ziehen. Schultern tief, langsam zurück.\n\nWarum: gleiche Zugrichtung wie die High Row – Rhomboiden und mittlerer Trapez gegen vorgerollte Schultern und Kopf-nach-vorn.",
+      "cat": [
+        "haltung"
+      ]
+    },
+    "FIVE hintere Kette": {
+      "text": "Gehaltene Positionen am FIVE-Gerät, je 20–45 Sek (Countdown in der App). Ruhig weiteratmen, nicht in den Schmerz ziehen. Becken neutral, Rippen unten – beim Vorlehnen nicht ins Hohlkreuz durchhängen.\n\nWarum: dehnt hintere Kette und Hüfte unter Kontrolle, ohne Last auf der Wirbelsäule – gegen die rechtsseitige Steifheit.",
+      "cat": [
+        "dehnen",
+        "kette"
+      ],
+      "unit": "sek"
+    },
     "Lat Pulldown": {
       "text": "Stange vor dem Kopf zur oberen Brust ziehen, nie in den Nacken. Erst Schulterblätter nach unten ziehen, dann Ellbogen Richtung Hüfte. Oberkörper leicht zurückgelehnt, Rippen unten, langsam hoch.\n\nHinweis: Der Lat zieht die Schultern eher nach innen-vorn – für deine Haltung ist hohes Rudern oder die MTS High Row die bessere Wahl.",
       "aliases": [
@@ -256,6 +354,9 @@
         "Lat Pull Down",
         "Lat-Pulldown",
         "Latziehen"
+      ],
+      "cat": [
+        "haltung"
       ]
     },
     "Bauchmaschine": {
@@ -265,6 +366,9 @@
         "Bauchpresse",
         "Crunch Maschine",
         "Abdominal"
+      ],
+      "cat": [
+        "pause"
       ]
     },
     "Rückenstreckmaschine": {
@@ -274,6 +378,9 @@
         "Hyperextension",
         "Rückenstreck Maschine",
         "Back Extension"
+      ],
+      "cat": [
+        "pause"
       ]
     },
     "Plank": {
@@ -282,13 +389,21 @@
         "Unterarmstütz",
         "Planke",
         "Plank Unterarm"
-      ]
+      ],
+      "cat": [
+        "pause",
+        "rumpf"
+      ],
+      "unit": "sek"
     },
     "Reverse Crunch": {
       "text": "Optional für den unteren Bauch, am Ende von B. Rückenlage, Kopf liegt, Knie angewinkelt. Becken einrollen und leicht vom Boden heben, nicht die Beine schwingen. Langsam ablegen, ausatmen beim Einrollen. Weglassen, falls sich der Reflux meldet.\n\nWarum: kräftigt den unteren Bauch und schult das Aufrichten des Beckens – gegen das Hohlkreuz.",
       "aliases": [
         "Reverse Crunches",
         "Umgekehrter Crunch"
+      ],
+      "cat": [
+        "rumpf"
       ]
     },
     "Schrägbank Kurzhantel": {
@@ -297,6 +412,9 @@
         "Schrägbankdrücken Kurzhantel",
         "Schrägbank KH",
         "Schrägbankdrücken"
+      ],
+      "cat": [
+        "drücken"
       ]
     },
     "Bankdrücken": {
@@ -304,6 +422,9 @@
       "aliases": [
         "Bankdrücken Langhantel",
         "Bench Press"
+      ],
+      "cat": [
+        "drücken"
       ]
     },
     "Rudern Maschine": {
@@ -313,6 +434,9 @@
         "Ruder Maschine",
         "Rudern sitzend Maschine",
         "Seated Row"
+      ],
+      "cat": [
+        "haltung"
       ]
     },
     "Rudern Kurzhantel einarmig": {
@@ -321,6 +445,9 @@
         "Kurzhantelrudern",
         "Einarmiges Rudern Kurzhantel",
         "Rudern KH einarmig"
+      ],
+      "cat": [
+        "haltung"
       ]
     },
     "Beinpresse": {
@@ -328,6 +455,9 @@
       "aliases": [
         "Leg Press",
         "Beinpresse Maschine"
+      ],
+      "cat": [
+        "beine"
       ]
     },
     "Beinbeuger": {
@@ -337,6 +467,10 @@
         "Leg Curl",
         "Beinbeuger liegend",
         "Beinbeuger sitzend"
+      ],
+      "cat": [
+        "kette",
+        "beine"
       ]
     },
     "Beinstrecker": {
@@ -344,6 +478,9 @@
       "aliases": [
         "Beinstrecker Maschine",
         "Leg Extension"
+      ],
+      "cat": [
+        "beine"
       ]
     },
     "Ausfallschritte": {
@@ -352,6 +489,10 @@
         "Ausfallschritt",
         "Lunges",
         "Ausfallschritte Kurzhantel"
+      ],
+      "cat": [
+        "beine",
+        "hüfte"
       ]
     },
     "Kreuzheben": {
@@ -359,6 +500,10 @@
       "aliases": [
         "Kreuzheben Langhantel",
         "Deadlift"
+      ],
+      "cat": [
+        "pause",
+        "kette"
       ]
     },
     "Kniebeuge": {
@@ -367,6 +512,9 @@
         "Kniebeuge Langhantel",
         "Squat",
         "Kniebeugen"
+      ],
+      "cat": [
+        "beine"
       ]
     },
     "Butterfly": {
@@ -375,6 +523,9 @@
         "Butterfly Maschine",
         "Fly",
         "Brust Butterfly"
+      ],
+      "cat": [
+        "drücken"
       ]
     },
     "Reverse Butterfly": {
@@ -383,6 +534,9 @@
         "Reverse Fly",
         "Butterfly Reverse",
         "Reverse Butterfly Maschine"
+      ],
+      "cat": [
+        "haltung"
       ]
     },
     "Seitheben Kurzhantel": {
@@ -390,6 +544,9 @@
       "aliases": [
         "Seitheben KH",
         "Seitheben"
+      ],
+      "cat": [
+        "optik"
       ]
     },
     "Schulterdrücken Maschine": {
@@ -398,6 +555,10 @@
         "Schulterpresse",
         "Schulterdrücken",
         "Shoulder Press"
+      ],
+      "cat": [
+        "drücken",
+        "optik"
       ]
     },
     "Klimmzug": {
@@ -407,6 +568,9 @@
         "Klimmzug unterstützt",
         "Assisted Pull Up",
         "Pull Up"
+      ],
+      "cat": [
+        "haltung"
       ]
     },
     "Abduktoren": {
@@ -415,6 +579,10 @@
         "Abduktion",
         "Abduktoren Maschine",
         "Hip Abduction"
+      ],
+      "cat": [
+        "hüfte",
+        "kette"
       ]
     },
     "Adduktoren": {
@@ -423,6 +591,9 @@
         "Adduktion",
         "Adduktoren Maschine",
         "Hip Adduction"
+      ],
+      "cat": [
+        "beine"
       ]
     },
     "Wadenheben": {
@@ -431,6 +602,9 @@
         "Wadenheben stehend",
         "Wadenmaschine",
         "Calf Raise"
+      ],
+      "cat": [
+        "beine"
       ]
     },
     "Crunch": {
@@ -440,7 +614,226 @@
         "Bauchpresse Boden",
         "Sit-up",
         "Sit-ups"
+      ],
+      "cat": [
+        "pause"
+      ]
+    },
+    "Hüftbeuger-Dehnung": {
+      "text": "Halber Kniestand. Becken nach hinten kippen (Steißbein einrollen), Gesäß anspannen, leicht nach vorn schieben. Dehnung vorn in der Hüfte, nicht im Rücken. 60 Sek pro Seite, rechts 2 Durchgänge.\n\nWarum: wichtigste Dehnung gegen das Hohlkreuz – verkürzte Hüftbeuger ziehen das Becken nach vorn.",
+      "cat": [
+        "hüfte",
+        "dehnen"
+      ],
+      "unit": "sek",
+      "aliases": [
+        "Hüftbeuger Dehnung",
+        "Hüftbeugerdehnung"
+      ]
+    },
+    "Katze-Kuh": {
+      "text": "Vierfüßlerstand. Rücken langsam rund machen (Katze), dann bis neutral strecken – nicht ins Hohlkreuz durchhängen. 8× langsam, mit der Atmung.\n\nWarum: bewegt die Lendenwirbelsäule sanft gegen die Reststeifigkeit.",
+      "cat": [
+        "hüfte",
+        "rumpf"
+      ],
+      "unit": "seite",
+      "aliases": [
+        "Katze Kuh",
+        "Cat Cow"
+      ]
+    },
+    "Chin Tucks": {
+      "text": "Im Liegen oder Hinterkopf an der Wand. Kinn waagerecht nach hinten schieben („Doppelkinn“), nicht nach unten nicken. 5 Sek halten, 2 × 10. Auch im Alltag zwischendurch.\n\nWarum: direkt gegen Kopf-nach-vorn; entlastet den SCM.",
+      "cat": [
+        "dehnen",
+        "haltung"
+      ],
+      "unit": "seite",
+      "aliases": [
+        "Chin Tuck",
+        "Kinn-Retraktion",
+        "Kinn zurück"
+      ]
+    },
+    "SCM-Dehnung links": {
+      "text": "Rechte Hand auf das linke Schlüsselbein, Kopf leicht nach rechts neigen und etwas nach oben drehen, bis es links vorn am Hals zieht. 60 Sek ruhig atmen, nicht in den Schmerz.\n\nWarum: entspannt den überspannten SCM links (Rauschen, Strang am Hals).",
+      "cat": [
+        "dehnen"
+      ],
+      "unit": "sek",
+      "aliases": [
+        "SCM Dehnung",
+        "SCM-Dehnung"
+      ]
+    },
+    "Brustöffnung an der Wand": {
+      "text": "Unterarm auf Schulterhöhe an Wand oder Türrahmen, Körper langsam wegdrehen, bis es vorn in der Brust zieht. Schulter tief. 60 Sek pro Seite.\n\nWarum: öffnet die Brust gegen vorgerollte Schultern.",
+      "cat": [
+        "dehnen",
+        "haltung"
+      ],
+      "unit": "sek",
+      "aliases": [
+        "Brustöffnung",
+        "Brustdehnung Wand",
+        "Türrahmen Dehnung"
+      ]
+    },
+    "Thoraxrotation sitzend": {
+      "text": "Aufrecht sitzen, Arme vor der Brust verschränkt, Oberkörper langsam zu jeder Seite drehen, Becken bleibt ruhig. 10× pro Seite.\n\nWarum: eine steife Brustwirbelsäule lässt den unteren Rücken und den Nacken mitarbeiten.",
+      "cat": [
+        "hüfte",
+        "haltung"
+      ],
+      "unit": "seite",
+      "aliases": [
+        "Thoraxrotation",
+        "Rotation sitzend"
+      ]
+    },
+    "Bird Dog": {
+      "text": "Vierfüßlerstand. Gegenarm und -bein langsam strecken, Becken bleibt waagerecht, kein Hohlkreuz, Blick zum Boden. 2 Sek halten, 8–10 pro Seite.\n\nWarum: verbindet die Diagonale – hintere Kette und Rumpf arbeiten über Kreuz zusammen, wie in deinem Muster.",
+      "cat": [
+        "rumpf",
+        "kette"
+      ],
+      "unit": "seite",
+      "aliases": [
+        "Birddog",
+        "Vierfüßler diagonal"
+      ]
+    },
+    "Seitstütz": {
+      "text": "Auf dem Unterarm, Knie gebeugt (leichter) oder Beine gestreckt. Becken hoch, Körper eine Linie, Kopf in Verlängerung. 20–30 Sek pro Seite.\n\nWarum: kräftigt den seitlichen Rumpf inkl. Quadratus lumborum – Stabilität für die rechte Seite ohne Druck auf den Bauch.",
+      "cat": [
+        "rumpf"
+      ],
+      "unit": "sek",
+      "aliases": [
+        "Side Plank",
+        "Seitlicher Unterarmstütz"
+      ]
+    },
+    "Clamshell": {
+      "text": "Seitenlage, Knie gebeugt, Füße zusammen. Oberes Knie öffnen, Becken bleibt still. 12–15 pro Seite, optional mit Miniband.\n\nWarum: kräftigt das seitliche Gesäß, stabilisiert Becken und Hüfte.",
+      "cat": [
+        "hüfte",
+        "kette"
+      ],
+      "unit": "seite",
+      "aliases": [
+        "Clam Shell",
+        "Muschel"
+      ]
+    },
+    "Wandengel": {
+      "text": "Rücken, Hinterkopf und Becken an der Wand, Rippen unten. Arme in U-Haltung langsam an der Wand hoch- und runterschieben, nur so weit, wie der Kontakt bleibt. 8–10×.\n\nWarum: Schulterblatt-Kontrolle und Haltung – gegen Kopf-nach-vorn und vorgerollte Schultern.",
+      "cat": [
+        "haltung",
+        "dehnen"
+      ],
+      "unit": "seite",
+      "aliases": [
+        "Wall Angels",
+        "Wall Angel",
+        "Wandengel"
+      ]
+    },
+    "Bauchlage Y-T-W": {
+      "text": "Bauchlage, Stirn auf einem Handtuch. Arme als Y, T und W anheben, jeweils Schulterblätter nach hinten-unten, Schultern tief. 8× je Position, ohne Gewicht.\n\nWarum: stärkt den mittleren und unteren Trapez – die Schwachstelle hinter den vorgerollten Schultern.",
+      "cat": [
+        "haltung"
+      ],
+      "unit": "seite",
+      "aliases": [
+        "Y-T-W",
+        "YTW",
+        "Y T W"
+      ]
+    },
+    "90/90 Hüftrotation": {
+      "text": "Sitzend, beide Beine im 90-Grad-Winkel vor bzw. neben dir. Knie langsam von einer Seite zur anderen kippen, Oberkörper aufrecht. 8× pro Seite.\n\nWarum: mobilisiert Innen- und Außenrotation der Hüfte – gegen die Steife rechts.",
+      "cat": [
+        "hüfte"
+      ],
+      "unit": "seite",
+      "aliases": [
+        "90-90",
+        "90 90 Hüfte",
+        "Hüftrotation 90/90"
+      ]
+    },
+    "Glute Bridge einbeinig rechts": {
+      "text": "Rückenlage, linkes Bein angezogen oder gestreckt. Über die rechte Ferse Becken anheben, oben 2 Sek halten, Becken bleibt waagerecht, kein Hohlkreuz. 10–12×.\n\nWarum: gezielt für die rechte hintere Kette (asymmetrische Phase).",
+      "cat": [
+        "kette",
+        "rumpf"
+      ],
+      "unit": "seite",
+      "aliases": [
+        "Einbeinige Glute Bridge",
+        "Glute Bridge einbeinig"
+      ]
+    },
+    "Kindhaltung": {
+      "text": "Knie auseinander, Gesäß zu den Fersen, Arme nach vorn, Stirn ablegen. 30–60 Sek ruhig in den unteren Rücken atmen.\n\nWarum: entlastet den unteren Rücken und streckt sanft die hintere Kette.",
+      "cat": [
+        "dehnen",
+        "hüfte"
+      ],
+      "unit": "sek",
+      "aliases": [
+        "Child's Pose",
+        "Kinderhaltung"
       ]
     }
-  }
+  },
+  "categories": [
+    {
+      "id": "haltung",
+      "label": "Haltung & Schulterblatt",
+      "hint": "Gegen vorgerollte Schultern und Kopf-nach-vorn – entlastet den SCM links."
+    },
+    {
+      "id": "kette",
+      "label": "Hintere Kette & Gesäß",
+      "hint": "Gegen die steife rechte hintere Seite; das Gesäß richtet zudem das Becken auf."
+    },
+    {
+      "id": "rumpf",
+      "label": "Rumpf & Becken",
+      "hint": "Gegen das Hohlkreuz – Stabilität ohne Druck auf den Bauch (Reflux)."
+    },
+    {
+      "id": "hüfte",
+      "label": "Hüfte & Mobilität",
+      "hint": "Gegen die Hüftsteife, v. a. rechts."
+    },
+    {
+      "id": "dehnen",
+      "label": "Dehnen & Nacken",
+      "hint": "Entlastung für Nacken und SCM; ruhig atmen, nicht in den Schmerz ziehen."
+    },
+    {
+      "id": "beine",
+      "label": "Beine",
+      "hint": "Grundkraft für Alltag und Optik."
+    },
+    {
+      "id": "drücken",
+      "label": "Brust & Drücken",
+      "hint": "Immer im Verhältnis: mehr ziehen als drücken."
+    },
+    {
+      "id": "optik",
+      "label": "Arme & Schulter-Optik",
+      "hint": "Für die Optik – Schultern dabei tief halten."
+    },
+    {
+      "id": "pause",
+      "label": "Pausiert / Vorsicht",
+      "hint": "Gerade nicht empfohlen – der Grund steht in der Beschreibung."
+    }
+  ]
 }
