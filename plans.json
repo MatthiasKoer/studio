@@ -1,5 +1,5 @@
 {
-  "version": "2026-11-09",
+  "version": "2026-11-09b",
   "note": "Neu: Reiter „Übungen“ mit Kategorien und Vorschlägen. Dazu FIVE als Haltezeit, Beschreibungen für alle Übungen, S53 hohes Rudern, Katze-Kuh, Chin Tucks, Face Pulls in A.",
   "plans": [
     {
@@ -834,6 +834,170 @@
       "id": "pause",
       "label": "Pausiert / Vorsicht",
       "hint": "Gerade nicht empfohlen – der Grund steht in der Beschreibung."
+    }
+  ],
+  "catRules": [
+    {
+      "cat": [
+        "pause"
+      ],
+      "match": [
+        "bauchmaschine",
+        "rückenstreck",
+        "hyperextension",
+        "crunch",
+        "sit-up",
+        "situp"
+      ]
+    },
+    {
+      "cat": [
+        "haltung"
+      ],
+      "match": [
+        "rudern",
+        "row",
+        "face pull",
+        "facepull",
+        "pulldown",
+        "pull down",
+        "latzug",
+        "lat zug",
+        "reverse butterfly",
+        "reverse fly",
+        "klimmzug",
+        "pull up",
+        "y-t-w",
+        "wandengel",
+        "wall angel",
+        "rotatoren",
+        "außenrotation",
+        "aussenrotation",
+        "schulterblatt"
+      ]
+    },
+    {
+      "cat": [
+        "kette"
+      ],
+      "match": [
+        "kreuzheben",
+        "deadlift",
+        "rdl",
+        "hip thrust",
+        "glute",
+        "gesäß",
+        "gesaess",
+        "beinbeuger",
+        "leg curl",
+        "hintere kette",
+        "good morning",
+        "five"
+      ]
+    },
+    {
+      "cat": [
+        "rumpf"
+      ],
+      "match": [
+        "dead bug",
+        "deadbug",
+        "pallof",
+        "paloff",
+        "plank",
+        "stütz",
+        "stuetz",
+        "bird dog",
+        "birddog",
+        "bauch",
+        "rumpf",
+        "core",
+        "becken"
+      ]
+    },
+    {
+      "cat": [
+        "hüfte"
+      ],
+      "match": [
+        "hüft",
+        "hueft",
+        "hip ",
+        "abduk",
+        "clam",
+        "90/90",
+        "beinpendel",
+        "ausfallschritt",
+        "lunge",
+        "mobil"
+      ]
+    },
+    {
+      "cat": [
+        "dehnen"
+      ],
+      "match": [
+        "dehn",
+        "stretch",
+        "scm",
+        "nacken",
+        "chin",
+        "kinn",
+        "brustöffnung",
+        "kindhaltung",
+        "katze",
+        "entspann"
+      ]
+    },
+    {
+      "cat": [
+        "beine"
+      ],
+      "match": [
+        "squat",
+        "kniebeuge",
+        "beinpresse",
+        "leg press",
+        "beinstrecker",
+        "leg extension",
+        "wade",
+        "calf",
+        "adduk",
+        "step up",
+        "bein"
+      ]
+    },
+    {
+      "cat": [
+        "drücken"
+      ],
+      "match": [
+        "brust",
+        "bank",
+        "press",
+        "drücken",
+        "druecken",
+        "butterfly",
+        "fly",
+        "dips",
+        "liegestütz",
+        "push"
+      ]
+    },
+    {
+      "cat": [
+        "optik"
+      ],
+      "match": [
+        "bizeps",
+        "biceps",
+        "curl",
+        "trizeps",
+        "triceps",
+        "seitheben",
+        "lateral",
+        "schulter"
+      ]
     }
   ]
 }

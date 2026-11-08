@@ -268,7 +268,9 @@ async function fetchRemote(){
 }
 async function checkRemote(){
   const j = await fetchRemote();
-  if(!j || j.version === D.repoVersion || j.version === D.repoSkipped) return;
+  if(!j) return;
+  syncMeta(j);
+  if(j.version === D.repoVersion || j.version === D.repoSkipped){ if(tab === "lib") render(); return; }
   remote = j; render();
 }
 const normName = s => String(s||"").toLowerCase()
@@ -322,6 +324,35 @@ function infoTargets(j){
   }
   return out;
 }
+/* Kategorien und Vorschläge – unabhängig vom Übernehmen eines Planstands, bei jedem Start.
+   Ändert nur Zuordnungen, nie Pläne oder Verlauf. Reihenfolge: eigene Zuordnung (D.cats) →
+   Repo-Zuordnung über Name/aliases → Stichwort-Regeln (catRules) für unbekannte Namen. */
+function syncMeta(j){
+  if(Array.isArray(j.categories) && j.categories.length) D.catDefs = j.categories;
+  const planNames = new Set(allRemoteEx(j).map(e => e.name));
+  const explicit = {};
+  const catalog = {};
+  for(const [key, val] of Object.entries(j.info || {})){
+    const v = typeof val === "string" ? { text: val } : val;
+    const name = localNameFor({ name: key, aliases: v.aliases || [] }) || (planNames.has(key) && knownExercises().some(k => k.name === key) ? key : null);
+    if(name){ if(v.cat && !explicit[name]) explicit[name] = v.cat; }
+    else if(!(D.hidden||[]).includes(key)) catalog[key] = { text: v.text || "", cat: v.cat || [], unit: v.unit || "" };
+  }
+  const rules = Array.isArray(j.catRules) ? j.catRules : [];
+  const byRule = name => {
+    const n = name.toLowerCase();
+    const r = rules.find(r => (r.match||[]).some(m => n.includes(String(m).toLowerCase())));
+    return r ? (r.cat || []) : [];
+  };
+  const rc = {};
+  for(const k of knownExercises()){
+    const c = explicit[k.name] || byRule(k.name);
+    if(c && c.length) rc[k.name] = c;
+  }
+  D.repoCats = rc;
+  D.catalog = catalog;
+  save();
+}
 /* Was würde sich ändern? Für die Vorschau. */
 function remoteDiff(j){
   const out = { renames: [], plans: [] };
@@ -371,17 +402,7 @@ function applyRemote(j){
     D.library[t.name] = { text: t.text, images: detail(t.name).images || [] };
     D.repoInfo[t.name] = t.text;
   }
-  /* Kategorien und Vorschläge: Übungen, die es lokal gibt, bekommen die Kategorien aus dem Repo
-     (eigene Zuordnung geht vor); alle anderen landen als Vorschlag im Übungs-Reiter. */
-  if(Array.isArray(j.categories)) D.catDefs = j.categories;
-  const planNames = new Set(allRemoteEx(j).map(e => e.name));
-  D.catalog = {};
-  for(const [key, val] of Object.entries(j.info || {})){
-    const v = typeof val === "string" ? { text: val } : val;
-    const name = planNames.has(key) ? key : localNameFor({ name: key, aliases: v.aliases || [] });
-    if(name){ if(v.cat) D.repoCats[name] = v.cat; }
-    else if(!(D.hidden||[]).includes(key)) D.catalog[key] = { text: v.text || "", cat: v.cat || [], unit: v.unit || "" };
-  }
+  syncMeta(j);
   D.repoVersion = j.version;
   delete D.repoSkipped;
   remote = null;
