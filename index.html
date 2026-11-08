@@ -357,6 +357,7 @@ function syncMeta(j){
     for(const n of [key, ...(v.aliases || [])]) idx[normName(n)] = key;
   }
   D.infoIndex = idx;
+  D.repoMobility = Object.fromEntries(j.plans.filter(rp => rp.mobility && rp.mobility.length).map(rp => [rp.name, rp.mobility]));
   D.mobTexts = Object.fromEntries(Object.entries(j.info || {}).filter(([,v]) => v && v.mobOnly).map(([k,v]) => [k, v.text]));
   save();
 }
@@ -870,9 +871,9 @@ function openMobility(line){
   openSheet(r.name, `<p class="small" style="white-space:pre-line;margin:0">${esc(t || "Für diese Übung gibt es noch keine Beschreibung. Sag Claude Bescheid, dann kommt sie mit dem nächsten Planstand.")}</p>`);
 }
 let mobOpen = null;
+const workoutMobility = w => (w.mobility && w.mobility.length) ? w.mobility : mobilityFor(w.planId && D.plans.find(p => p.id === w.planId));
 function mobCard(w){
-  const plan = w.planId && D.plans.find(p => p.id === w.planId);
-  const list = plan && plan.mobility || [];
+  const list = workoutMobility(w);
   if(!list.length) return "";
   if(!w.mobDone) w.mobDone = [];
   const done = w.mobDone.length, all = done >= list.length;
@@ -911,11 +912,11 @@ function viewPicker(){
         ${p.exercises.map(e => `<div class="between small" style="padding:2px 0">
             <span class="trunc">${esc(e.name)}</span>
             <span class="muted num">${planLine(e)}</span></div>`).join("")}
-        ${p.mobility && p.mobility.length ? `
+        ${mobilityFor(p).length ? `
         <details style="margin-top:10px">
           <summary class="eyebrow" style="cursor:pointer">Aufwärmen &amp; Mobilität</summary>
           <div class="small" style="margin-top:4px">
-            ${p.mobility.map(m => mobLine(m)).join("")}
+            ${mobilityFor(p).map(m => mobLine(m)).join("")}
           </div>
         </details>` : ""}
         <button class="btn" data-start="${p.id}" style="margin-top:12px">Starten</button>
@@ -926,11 +927,23 @@ function viewPicker(){
 
 /* --- Training --- */
 
+/* Aufwärmen eines Plans: eigene Liste, sonst die aus dem Repo-Plan mit gleichem Namen
+   (auch Studio-Varianten „Einheit A – S53“ oder ähnliche Namen wie „A – Hintere Kette“) */
+function mobilityFor(plan){
+  if(!plan) return [];
+  if(plan.mobility && plan.mobility.length) return plan.mobility;
+  const rm = D.repoMobility || {};
+  const base = (plan.name || "").split(" – ")[0];
+  if(rm[base]) return rm[base];
+  const nb = normName(base), keys = Object.keys(rm);
+  const k = keys.find(k => nb.includes(normName(k))) || keys.find(k => normName(k).endsWith(nb) && nb.length <= 2);
+  return k ? rm[k] : [];
+}
 function startWorkout(plan){
   mobOpen = null;
   const w = { id: uid(), planId: plan ? plan.id : null,
     title: plan ? plan.name + " – " + plan.subtitle : "Freies Training",
-    start: Date.now(), end: null, exercises: [] };
+    start: Date.now(), end: null, exercises: [], mobility: mobilityFor(plan).slice(), mobDone: [] };
   if(plan){
     w.exercises = plan.exercises.map(pe => ({
       name: pe.name, unit: peUnit(pe), target: pe.sets, reps: pe.reps, rest: pe.rest,
@@ -1849,8 +1862,8 @@ function bind(){
   });
 
   q("[data-mob]", el => el.onclick = ev => { ev.preventDefault(); ev.stopPropagation(); openMobility(el.dataset.mob); });
-  q("[data-mobtoggle]", el => el.onclick = () => { const w = D.active, plan = w && D.plans.find(p => p.id === w.planId);
-    const all = w && plan && (w.mobDone||[]).length >= (plan.mobility||[]).length;
+  q("[data-mobtoggle]", el => el.onclick = () => { const w = D.active;
+    const all = w && (w.mobDone||[]).length >= workoutMobility(w).length;
     mobOpen = !(mobOpen === null ? !all : mobOpen); render(); });
   q("[data-mobtick]", b => b.onclick = () => { const i = +b.dataset.mobtick, w = D.active;
     w.mobDone = w.mobDone.includes(i) ? w.mobDone.filter(x => x !== i) : [...w.mobDone, i]; save(); render(); });
