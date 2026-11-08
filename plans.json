@@ -1,6 +1,6 @@
 {
-  "version": "2026-11-08c",
-  "note": "Pilates-Stuhl heißt jetzt „FIVE hintere Kette“ (Verlauf bleibt). Im S53 hohes Rudern am Kabelzug statt MTS High Row bzw. Lat Pulldown. Katze-Kuh, Chin Tucks, Face Pulls in A.",
+  "version": "2026-11-08d",
+  "note": "FIVE als Haltezeit (3 × 30 Sek), Beschreibungen für alle Übungen ergänzt. Dazu: S53 hohes Rudern statt MTS High Row, Katze-Kuh, Chin Tucks, Face Pulls in A.",
   "plans": [
     {
       "name": "Einheit A",
@@ -85,15 +85,16 @@
         },
         {
           "name": "FIVE hintere Kette",
-          "sets": 2,
-          "reps": 8,
-          "rest": 60,
+          "sets": 3,
+          "reps": 30,
+          "rest": 15,
           "aliases": [
             "Pilates-Stuhl hintere Kette",
             "Pilatesstuhl hintere Kette",
             "Pilates Stuhl hintere Kette",
             "FIVE"
-          ]
+          ],
+          "unit": "sek"
         },
         {
           "name": "Dead Bug",
@@ -246,6 +247,200 @@
     "Trizeps Kabelzug": "Zweiter Teil des Supersatzes mit Bizeps. Ellbogen eng, Schultern tief.",
     "Pallof Press": "Seitlich zum Kabel, Griff vor der Brust nach vorn drücken, 2 Sek halten, Rumpf dreht nicht mit. Gesäß fest, Rippen unten.\n\nWarum: Stabilität gegen Rotation – passt zum diagonalen Muster; kein Hohlkreuz, kein Druck auf den Bauch.",
     "Hohes Rudern Kabelzug": "Ersatz für die MTS High Row im S53. Kabel oben oder auf Brusthöhe, sitzend oder kniend. Erst Schulterblätter nach hinten-unten, dann Ellbogen leicht nach außen zur oberen Brust ziehen. Schultern tief, langsam zurück.\n\nWarum: gleiche Zugrichtung wie die High Row – Rhomboiden und mittlerer Trapez gegen vorgerollte Schultern und Kopf-nach-vorn.",
-    "FIVE hintere Kette": "Am FIVE-Gerät. Kontrolliert, ohne Schwung. Becken neutral, Rippen unten – beim Vorlehnen nicht ins Hohlkreuz durchhängen. Ruhig atmen, nicht in den Schmerz ziehen.\n\nWarum: hintere Kette und Hüfte mit viel Kontrolle und wenig Last auf der Wirbelsäule."
+    "FIVE hintere Kette": "Gehaltene Positionen am FIVE-Gerät, je 20–45 Sek (Countdown in der App). Ruhig weiteratmen, nicht in den Schmerz ziehen. Becken neutral, Rippen unten – beim Vorlehnen nicht ins Hohlkreuz durchhängen.\n\nWarum: dehnt hintere Kette und Hüfte unter Kontrolle, ohne Last auf der Wirbelsäule – gegen die rechtsseitige Steifheit.",
+    "Lat Pulldown": {
+      "text": "Stange vor dem Kopf zur oberen Brust ziehen, nie in den Nacken. Erst Schulterblätter nach unten ziehen, dann Ellbogen Richtung Hüfte. Oberkörper leicht zurückgelehnt, Rippen unten, langsam hoch.\n\nHinweis: Der Lat zieht die Schultern eher nach innen-vorn – für deine Haltung ist hohes Rudern oder die MTS High Row die bessere Wahl.",
+      "aliases": [
+        "Latzug",
+        "Lat Pulldow",
+        "Lat Pull Down",
+        "Lat-Pulldown",
+        "Latziehen"
+      ]
+    },
+    "Bauchmaschine": {
+      "text": "Nicht mehr im Plan: Der Druck auf den Bauch und das Pressen bei der Rückführung passen schlecht zu Reflux und Atmung. Ersatz: Dead Bug (A) und Pallof Press (B).\n\nFalls doch: wenig Gewicht, beim Einrollen ausatmen, Kopf nicht nach vorn ziehen.",
+      "aliases": [
+        "Bauch Maschine",
+        "Bauchpresse",
+        "Crunch Maschine",
+        "Abdominal"
+      ]
+    },
+    "Rückenstreckmaschine": {
+      "text": "Vorerst nicht im Plan (Hohlkreuz, mittiger Rückenschmerz). Wenn später wieder: nur bis zur geraden Linie aufrichten, nie überstrecken, Gesäß fest, langsam.\n\nWarum vorsichtig: Überstrecken belastet genau die Lendenwirbelsäule, die beim Hohlkreuz ohnehin in Streckung steht.",
+      "aliases": [
+        "Rückenstrecker",
+        "Hyperextension",
+        "Rückenstreck Maschine",
+        "Back Extension"
+      ]
+    },
+    "Plank": {
+      "text": "Ersetzt durch Pallof Press. Falls doch: Unterarme unter den Schultern, Gesäß fest, Becken leicht eingerollt – kein Durchhängen ins Hohlkreuz. Kopf in Verlängerung, nicht nach vorn schieben. Lieber kurz und sauber (20–30 Sek).",
+      "aliases": [
+        "Unterarmstütz",
+        "Planke",
+        "Plank Unterarm"
+      ]
+    },
+    "Reverse Crunch": {
+      "text": "Optional für den unteren Bauch, am Ende von B. Rückenlage, Kopf liegt, Knie angewinkelt. Becken einrollen und leicht vom Boden heben, nicht die Beine schwingen. Langsam ablegen, ausatmen beim Einrollen. Weglassen, falls sich der Reflux meldet.\n\nWarum: kräftigt den unteren Bauch und schult das Aufrichten des Beckens – gegen das Hohlkreuz.",
+      "aliases": [
+        "Reverse Crunches",
+        "Umgekehrter Crunch"
+      ]
+    },
+    "Schrägbank Kurzhantel": {
+      "text": "Bank ca. 30°. Schulterblätter zurück und tief in die Bank, Ellbogen etwa 45° vom Körper. Kontrolliert ablassen, Schultern rollen oben nicht nach vorn.\n\nWarum: Alternative zur Brustpresse; die Schulterblattposition schützt vor vorgerollten Schultern.",
+      "aliases": [
+        "Schrägbankdrücken Kurzhantel",
+        "Schrägbank KH",
+        "Schrägbankdrücken"
+      ]
+    },
+    "Bankdrücken": {
+      "text": "Schulterblätter zusammen und tief, Füße fest, Rippen nicht übertrieben anheben (kein starkes Hohlkreuz). Stange zur unteren Brust, kontrolliert.\n\nHinweis: Brustpresse oder Schrägbank sind für dich schulterfreundlicher.",
+      "aliases": [
+        "Bankdrücken Langhantel",
+        "Bench Press"
+      ]
+    },
+    "Rudern Maschine": {
+      "text": "Brust ans Polster, Schulterblätter zuerst nach hinten-unten, dann Ellbogen eng zurück. Schultern tief, langsam zurück.\n\nWarum: Rhomboiden und mittlerer Trapez – Gegenspieler zu vorgerollten Schultern.",
+      "aliases": [
+        "Rudermaschine",
+        "Ruder Maschine",
+        "Rudern sitzend Maschine",
+        "Seated Row"
+      ]
+    },
+    "Rudern Kurzhantel einarmig": {
+      "text": "Hand und Knie auf der Bank, Rücken gerade. Schulterblatt zuerst, Ellbogen eng zur Hüfte ziehen, Schulter nicht zum Ohr. Linke Seite ggf. mehr Wiederholungen (asymmetrische Phase).",
+      "aliases": [
+        "Kurzhantelrudern",
+        "Einarmiges Rudern Kurzhantel",
+        "Rudern KH einarmig"
+      ]
+    },
+    "Beinpresse": {
+      "text": "Rücken und Becken bleiben am Polster – nicht so tief gehen, dass das Becken abrollt. Knie folgen den Zehen, Knie oben nicht durchstrecken.\n\nWarum: Beinkraft ohne Last auf der Wirbelsäule.",
+      "aliases": [
+        "Leg Press",
+        "Beinpresse Maschine"
+      ]
+    },
+    "Beinbeuger": {
+      "text": "Hüfte bleibt aufs Polster gedrückt, kein Hohlkreuz beim Beugen. Langsam ablassen.\n\nWarum: hintere Oberschenkel als Teil der hinteren Kette.",
+      "aliases": [
+        "Beinbeuger Maschine",
+        "Leg Curl",
+        "Beinbeuger liegend",
+        "Beinbeuger sitzend"
+      ]
+    },
+    "Beinstrecker": {
+      "text": "Rücken ans Polster, Gewicht kontrolliert, oben kurz halten, langsam ablassen. Knie nicht ruckartig durchschlagen.",
+      "aliases": [
+        "Beinstrecker Maschine",
+        "Leg Extension"
+      ]
+    },
+    "Ausfallschritte": {
+      "text": "Aufrechter Oberkörper, Rippen unten, hinteres Knie Richtung Boden. Beim hinteren Bein Gesäß anspannen – dehnt nebenbei den Hüftbeuger.\n\nWarum: einseitige Beinkraft und Hüftbeuger-Dehnung in einem; rechts gern betonen.",
+      "aliases": [
+        "Ausfallschritt",
+        "Lunges",
+        "Ausfallschritte Kurzhantel"
+      ]
+    },
+    "Kreuzheben": {
+      "text": "Hüfte nach hinten, Rücken neutral, Stange nah am Körper. Oben durch Gesäßanspannung aufrichten, nicht zurücklehnen.\n\nHinweis: Früher Rückenbeschwerden danach – rumänisches Kreuzheben ist im Plan die schonendere Variante.",
+      "aliases": [
+        "Kreuzheben Langhantel",
+        "Deadlift"
+      ]
+    },
+    "Kniebeuge": {
+      "text": "Aufrecht, Rippen unten, Knie folgen den Zehen. Nur so tief, wie das Becken nicht abkippt. Bei Unsicherheit lieber Goblet Squat.",
+      "aliases": [
+        "Kniebeuge Langhantel",
+        "Squat",
+        "Kniebeugen"
+      ]
+    },
+    "Butterfly": {
+      "text": "Schultern tief und hinten, Arme leicht gebeugt, langsam öffnen – Dehnung vorn spüren, nicht über den Schmerz.\n\nHinweis: Brustübung; im Verhältnis immer mehr ziehen als drücken.",
+      "aliases": [
+        "Butterfly Maschine",
+        "Fly",
+        "Brust Butterfly"
+      ]
+    },
+    "Reverse Butterfly": {
+      "text": "Brust ans Polster, Arme leicht gebeugt nach hinten-außen führen, Schulterblätter zusammen, Schultern tief. Langsam zurück.\n\nWarum: hintere Schulter und oberer Rücken – wie Face Pull gegen vorgerollte Schultern.",
+      "aliases": [
+        "Reverse Fly",
+        "Butterfly Reverse",
+        "Reverse Butterfly Maschine"
+      ]
+    },
+    "Seitheben Kurzhantel": {
+      "text": "Max. bis Schulterhöhe, Ellbogen leicht gebeugt, Schultern nicht zum Ohr ziehen. Langsam ablassen.",
+      "aliases": [
+        "Seitheben KH",
+        "Seitheben"
+      ]
+    },
+    "Schulterdrücken Maschine": {
+      "text": "Rücken ans Polster, Rippen unten, kein Hohlkreuz. Schultern unten lassen. Wegen SCM links: lieber einarmig rechts mit Kurzhantel.",
+      "aliases": [
+        "Schulterpresse",
+        "Schulterdrücken",
+        "Shoulder Press"
+      ]
+    },
+    "Klimmzug": {
+      "text": "Erst Schulterblätter nach unten ziehen, dann hochziehen. Kein Schwung, kein Hohlkreuz, Kopf nicht nach vorn strecken. Ggf. mit Unterstützung (Band/Maschine).",
+      "aliases": [
+        "Klimmzüge",
+        "Klimmzug unterstützt",
+        "Assisted Pull Up",
+        "Pull Up"
+      ]
+    },
+    "Abduktoren": {
+      "text": "Aufrecht sitzen, Becken neutral, kontrolliert öffnen und schließen.\n\nWarum: seitliches Gesäß stabilisiert das Becken – hilfreich bei Hüftsteife.",
+      "aliases": [
+        "Abduktion",
+        "Abduktoren Maschine",
+        "Hip Abduction"
+      ]
+    },
+    "Adduktoren": {
+      "text": "Aufrecht sitzen, kontrolliert schließen, langsam öffnen, nicht in die volle Dehnung reißen.",
+      "aliases": [
+        "Adduktion",
+        "Adduktoren Maschine",
+        "Hip Adduction"
+      ]
+    },
+    "Wadenheben": {
+      "text": "Langsam hoch, oben kurz halten, langsam tief. Aufrecht, kein Hohlkreuz.",
+      "aliases": [
+        "Wadenheben stehend",
+        "Wadenmaschine",
+        "Calf Raise"
+      ]
+    },
+    "Crunch": {
+      "text": "Ersetzt durch Dead Bug und Pallof Press (Reflux, Nacken). Falls doch: Kopf nicht mit den Händen nach vorn ziehen, Kinn locker, beim Aufrollen ausatmen.",
+      "aliases": [
+        "Crunches",
+        "Bauchpresse Boden",
+        "Sit-up",
+        "Sit-ups"
+      ]
+    }
   }
 }

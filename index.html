@@ -295,6 +295,25 @@ function localNameFor(re){
   for(const n of names) if(keys.has(normName(n))) return n;
   return null;
 }
+/* Beschreibungen aus plans.json: für Planübungen und für Übungen, die es lokal schon gibt
+   (auch unter anderem Namen, über aliases). Unbekannte Übungen werden nicht angelegt.
+   Ersetzt wird nur ein leerer Text oder der zuletzt übernommene Repo-Text — eigene Notizen bleiben. */
+function infoTargets(j){
+  if(!D.repoInfo) D.repoInfo = {};
+  const planNames = new Set(allRemoteEx(j).map(e => e.name));
+  const hid = new Set(D.hidden || []);
+  const out = [], done = new Set();
+  for(const [key, val] of Object.entries(j.info || {})){
+    const text = typeof val === "string" ? val : val.text;
+    const name = planNames.has(key) ? key : localNameFor({ name: key, aliases: (val && val.aliases) || [] });
+    if(!name || hid.has(name) || done.has(name)) continue;
+    const cur = detail(name).text;
+    if(cur === text) continue;
+    if(cur.trim() && cur !== D.repoInfo[name]) continue;
+    done.add(name); out.push({ name, text });
+  }
+  return out;
+}
 /* Was würde sich ändern? Für die Vorschau. */
 function remoteDiff(j){
   const out = { renames: [], plans: [] };
@@ -340,14 +359,9 @@ function applyRemote(j){
       });
     }
   }
-  /* Ausführungshinweise: nur ersetzen, wenn leer oder noch der zuletzt übernommene Repo-Text */
-  if(!D.repoInfo) D.repoInfo = {};
-  for(const [name, text] of Object.entries(j.info || {})){
-    const det = detail(name);
-    if(!det.text.trim() || det.text === D.repoInfo[name]){
-      D.library[name] = { text, images: det.images || [] };
-      D.repoInfo[name] = text;
-    }
+  for(const t of infoTargets(j)){
+    D.library[t.name] = { text: t.text, images: detail(t.name).images || [] };
+    D.repoInfo[t.name] = t.text;
   }
   D.repoVersion = j.version;
   delete D.repoSkipped;
@@ -375,6 +389,8 @@ function openRemoteSheet(){
       ${li(p.add, "+")}${li(p.del, "−")}${li(p.changed, "·")}
       ${!p.add.length && !p.del.length && !p.changed.length ? '<div class="small muted">Übungen unverändert, Aufwärmen/Hinweise aktualisiert</div>' : ""}
     </div>`).join("")}
+    ${(() => { const it = infoTargets(j); return it.length ? `<div class="card"><div class="eyebrow">Beschreibungen ergänzt (${it.length})</div>
+      <div class="small muted">${it.map(t => esc(t.name)).join(" · ")}</div></div>` : ""; })()}
     <button class="btn" id="remoteok" style="margin-top:16px">Übernehmen</button>
     <button class="btn ghost" id="remoteskip" style="margin-top:9px">Diesen Stand nicht übernehmen</button>
   `, () => {
