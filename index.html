@@ -374,21 +374,74 @@ function syncMeta(j){
   D.mobTexts = Object.fromEntries(Object.entries(j.info || {}).filter(([,v]) => v && v.mobOnly).map(([k,v]) => [k, v.text]));
   save();
 }
+/* Zwei einseitige Übungen (links/rechts) zu einer L/R-Übung zusammenführen.
+   In plans.json: "mergeSides": { "left": "… links", "right": "… rechts" }.
+   Verlauf: Satz i links + Satz i rechts → ein L/R-Satz. Eigene Notizen bleiben erhalten. */
+function sideMerges(j){
+  const out = [];
+  for(const re of allRemoteEx(j)) if(re.mergeSides){
+    const L = localNameFor({ name: re.mergeSides.left, aliases: [] }), R = localNameFor({ name: re.mergeSides.right, aliases: [] });
+    if((L || R) && L !== re.name && R !== re.name && !out.some(m => m.to === re.name)) out.push({ to: re.name, L, R });
+  }
+  return out;
+}
+function mergeSidesLocal(m){
+  const { to, L, R } = m;
+  /* Verlauf */
+  for(const w of D.history){
+    const ex = w.exercises || [];
+    const il = L ? ex.findIndex(e => e.name === L) : -1, ir = R ? ex.findIndex(e => e.name === R) : -1;
+    if(il < 0 && ir < 0) continue;
+    const el = il >= 0 ? ex[il] : null, er = ir >= 0 ? ex[ir] : null;
+    const sl = el ? doneSets(el) : [], sr = er ? doneSets(er) : [];
+    const n = Math.max(sl.length, sr.length);
+    const merged = { name: to, unit: (er || el).unit || "kg", sides: true, rest: (er || el).rest, reps: (er || el).reps,
+      sets: Array.from({ length: n }, (_, i) => ({ w: sr[i] ? sr[i].w || 0 : null, r: sr[i] ? sr[i].r || 0 : null,
+        wl: sl[i] ? sl[i].w || 0 : null, rl: sl[i] ? sl[i].r || 0 : null, done: true })) };
+    const first = Math.min(...[il, ir].filter(i => i >= 0));
+    w.exercises = ex.filter((_, i) => i !== il && i !== ir);
+    w.exercises.splice(first, 0, merged);
+  }
+  /* Pläne: Eintrag der linken (sonst rechten) Seite wird zur neuen Übung, die andere entfällt */
+  for(const p of D.plans){
+    const ex = p.exercises || [];
+    const keep = ex.find(e => e.name === L) || ex.find(e => e.name === R);
+    if(!keep) continue;
+    p.exercises = ex.filter(e => e === keep || (e.name !== L && e.name !== R));
+    keep.name = to; keep.sides = true;
+  }
+  /* Beschreibung, Bilder, Einheit, Kategorien */
+  if(!D.repoInfo) D.repoInfo = {};
+  const parts = [], imgs = [];
+  for(const [lab, n] of [["Links", L], ["Rechts", R]]){
+    if(!n) continue;
+    const d = D.library[n];
+    if(d){ if(d.text && d.text.trim() && d.text !== D.repoInfo[n]) parts.push(lab + ": " + d.text.trim()); imgs.push(...(d.images || [])); }
+    delete D.library[n]; delete D.repoInfo[n];
+    if(D.units[n] && !D.units[to]) D.units[to] = D.units[n];
+    delete D.units[n];
+    if(D.cats && D.cats[n] && !D.cats[to]) D.cats[to] = D.cats[n];
+    if(D.cats) delete D.cats[n];
+    unhide(to); D.hidden = (D.hidden || []).filter(x => x !== n);
+  }
+  if(parts.length || imgs.length) D.library[to] = { text: parts.join("\n\n"), images: imgs };
+}
 /* Was würde sich ändern? Für die Vorschau. */
 function remoteDiff(j){
-  const out = { renames: [], plans: [] };
+  const out = { renames: [], plans: [], merges: sideMerges(j) };
   const seen = new Set();
   for(const re of allRemoteEx(j)){
     const ln = localNameFor(re);
     if(ln && ln !== re.name && !seen.has(ln)){ seen.add(ln); out.renames.push([ln, re.name]); }
   }
   const ren = new Map(out.renames);
+  for(const m of out.merges){ if(m.L) ren.set(m.L, m.to); if(m.R) ren.set(m.R, m.to); }
   for(const rp of j.plans){
     const locals = localPlansFor(rp);
     if(!locals.length){ out.plans.push({ name: rp.name, isNew: true, add: planExercises(rp, null).map(e => e.name), del: [], changed: [] }); continue; }
     for(const lp of locals){
       const rex = planExercises(rp, lp), target = rex.map(e => e.name);
-      const cur = (lp.exercises||[]).map(e => ren.get(e.name) || e.name);
+      const cur = [...new Set((lp.exercises||[]).map(e => ren.get(e.name) || e.name))];
       const changed = rex.filter(re => { const le = (lp.exercises||[]).find(e => (ren.get(e.name)||e.name) === re.name);
         return le && (le.sets !== re.sets || le.reps !== re.reps || !!le.sides !== !!re.sides || (re.repsL||0) !== (le.repsL||0)); })
         .map(re => re.name + " → " + re.sets + " × " + (re.sides && re.repsL ? re.repsL + "/" + re.reps : re.reps) + (re.sides ? ", links/rechts getrennt" : ""));
@@ -399,6 +452,7 @@ function remoteDiff(j){
   return out;
 }
 function applyRemote(j){
+  for(const m of sideMerges(j)) mergeSidesLocal(m);
   for(const re of allRemoteEx(j)){
     const ln = localNameFor(re);
     if(ln && ln !== re.name) renameExercise(ln, re.name);
@@ -448,6 +502,8 @@ function openRemoteSheet(){
   openSheet("Neuer Planstand", `
     <p class="small muted" style="margin:0 0 12px">Stand ${esc(j.version)}. Verlauf, Gewichte und die
       kg/Stufen-Einstellung pro Studio bleiben erhalten.</p>
+    ${d.merges.length ? `<div class="card"><div class="eyebrow">Links + rechts → eine Übung (Verlauf wird zusammengeführt)</div>
+      ${d.merges.map(m => `<div class="small">${esc([m.L, m.R].filter(Boolean).join(" + "))} → ${esc(m.to)}</div>`).join("")}</div>` : ""}
     ${d.renames.length ? `<div class="card"><div class="eyebrow">Umbenannt (Verlauf wird zusammengeführt)</div>
       ${d.renames.map(([a,b]) => `<div class="small">${esc(a)} → ${esc(b)}</div>`).join("")}</div>` : ""}
     ${d.plans.map(p => `<div class="card"><div class="eyebrow">${esc(p.name)}${p.isNew ? " (neu)" : ""}</div>
@@ -564,10 +620,11 @@ function stufe(v){ const r = Math.round(v*10)/10; return "Stufe " + (r === Math.
 const fmtW = (v, u) => u === "stufe" ? stufe(v) : kg(v);
 const hasSides = s => s && (s.wl !== undefined || s.rl !== undefined);
 const fmtSet = (s, u) => u === "sek" ? (s.r||0) + " Sek" : u === "seite" ? (s.r||0) + " / Seite"
-  : hasSides(s) ? "L " + fmtW(s.wl||0, u) + " × " + (s.rl||0) + " · R " + fmtW(s.w||0, u) + " × " + (s.r||0)
+  : hasSides(s) ? "L " + (s.wl == null ? "–" : fmtW(s.wl, u) + " × " + (s.rl||0)) + " · R " + (s.w == null ? "–" : fmtW(s.w, u) + " × " + (s.r||0))
   : fmtW(s.w, u) + " × " + s.r;
 /* Seiten eines Satzes als Liste [{w,r}] – bei getrennten Seiten links und rechts */
-const setSides = s => hasSides(s) ? [{ w: s.wl||0, r: s.rl||0 }, { w: s.w||0, r: s.r||0 }] : [{ w: s.w||0, r: s.r||0 }];
+const setSides = s => (hasSides(s) ? [{ w: s.wl, r: s.rl }, { w: s.w, r: s.r }] : [{ w: s.w, r: s.r }])
+  .filter(x => x.w != null).map(x => ({ w: x.w || 0, r: x.r || 0 }));
 const unitShort = u => ({stufe:"St.", sek:"Sek", seite:"/Seite"})[u] || "kg";
 const unitLong = u => ({stufe:"Stufe", sek:"Sek", seite:"Wdh./Seite"})[u] || "kg";
 const repsLabel = u => u === "sek" ? "Sekunden pro Satz" : u === "seite" ? "Wiederholungen pro Seite" : "Wiederholungen";
@@ -622,9 +679,12 @@ function prefillSets(name, n, reps, unit, sides, repsL){
   const ps = prev ? doneSets(prev.ex) : [];
   return Array.from({length: n}, (_,i) => {
     const p = ps[i] || ps[ps.length-1] || {};
-    const set = { w: p.w || 0, r: reps, done: false };
+    /* letzter echter Wert einer Seite (fehlende Sätze sind null) */
+    const pick = k => { if(p[k] != null) return p[k]; for(let x = ps.length-1; x >= 0; x--) if(ps[x][k] != null) return ps[x][k]; return null; };
+    const wr = pick("w");
+    const set = { w: wr || 0, r: reps, done: false };
     /* Links: letzter Linkswert, sonst (früher ohne Seiten erfasst) derselbe Wert wie rechts */
-    if(sides){ set.wl = p.wl !== undefined ? p.wl : (p.w || 0); set.rl = repsL || reps; }
+    if(sides){ const wl = pick("wl"); set.wl = wl != null ? wl : (wr || 0); set.rl = repsL || reps; }
     return set;
   });
 }

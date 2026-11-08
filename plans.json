@@ -1,6 +1,6 @@
 {
-  "version": "2026-11-09g",
-  "note": "Neu: links/rechts getrennte Gewichte – Arnold Press und Seitheben pro Seite. Dazu: Arnold Press beidarmig, Übungen-Reiter, Beschreibungen, FIVE als Haltezeit, S53 hohes Rudern, Katze-Kuh, Chin Tucks, Face Pulls in A.",
+  "version": "2026-11-09h",
+  "note": "Rudern einarmig links + rechts sind jetzt eine L/R-Übung (links 12, rechts 10). Dazu: L/R bei Arnold Press und Seitheben, Übungen-Reiter, Beschreibungen, FIVE als Haltezeit, S53 hohes Rudern.",
   "plans": [
     {
       "name": "Einheit A",
@@ -147,16 +147,20 @@
           ]
         },
         {
-          "name": "Kabelzug Rudern einarmig links",
-          "sets": 3,
-          "reps": 12,
-          "rest": 30
-        },
-        {
-          "name": "Kabelzug Rudern einarmig rechts",
+          "name": "Kabelzug Rudern einarmig",
           "sets": 3,
           "reps": 10,
-          "rest": 60
+          "repsL": 12,
+          "rest": 60,
+          "sides": true,
+          "mergeSides": {
+            "left": "Kabelzug Rudern einarmig links",
+            "right": "Kabelzug Rudern einarmig rechts"
+          },
+          "aliases": [
+            "Rudern einarmig Kabelzug",
+            "Kabelzug Rudern einarmig L/R"
+          ]
         },
         {
           "name": "MTS High Row",
@@ -296,18 +300,6 @@
       "text": "Schulterblätter zurück und tief, Schultern rollen nicht nach vorn. Alternativ Schrägbank Kurzhantel.\n\nWarum: Druckkraft, ohne die Schultern in die Vorhaltung zu ziehen.",
       "cat": [
         "drücken"
-      ]
-    },
-    "Kabelzug Rudern einarmig links": {
-      "text": "Direkt im Wechsel mit rechts, ohne Pause dazwischen. Schulterblatt zuerst, Schulter tief.\n\nWarum: links mehr Volumen (12 statt 10) als Ausgleich der Asymmetrie.",
-      "cat": [
-        "haltung"
-      ]
-    },
-    "Kabelzug Rudern einarmig rechts": {
-      "text": "Direkt im Wechsel mit links. Schulterblatt zuerst, Schulter tief.\n\nWarum: Teil des asymmetrischen Ruderns – rechts etwas weniger Volumen.",
-      "cat": [
-        "haltung"
       ]
     },
     "Seitheben Kabelzug beidseits": {
@@ -827,6 +819,13 @@
       "cat": [
         "drücken",
         "optik"
+      ],
+      "aliases": []
+    },
+    "Kabelzug Rudern einarmig": {
+      "text": "Links und rechts direkt im Wechsel, ohne Pause dazwischen; Pause erst nach beiden Seiten. Links 12, rechts 10 Wiederholungen (asymmetrische Phase: links mehr Volumen). Schulterblatt zuerst nach hinten-unten, dann Ellbogen eng zur Hüfte, Schulter tief, langsam zurück.\n\nWarum: Rhomboiden und mittlerer Trapez gegen vorgerollte Schultern; die getrennte Erfassung zeigt den Seitenunterschied – wird er klein, ist es Zeit für symmetrisches Training (gleiche Wdh. beidseits).",
+      "cat": [
+        "haltung"
       ],
       "aliases": []
     }
