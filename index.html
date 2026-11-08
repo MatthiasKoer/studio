@@ -241,6 +241,134 @@ function migrate(){
   if(!D.units) D.units = {};
   for(const p of D.plans||[]) for(const e of p.exercises||[]) if(!e.unit) e.unit = unitOf(e.name);
 }
+/* ---------- Pläne aus dem Repo (plans.json) ----------
+   Die App fragt beim Start nach plans.json. Gibt es eine neue Version, erscheint ein Hinweis;
+   übernommen wird erst nach Bestätigung. Verlauf, Gewichte und die kg/Stufen-Einstellung
+   pro Studio-Plan bleiben erhalten. Pläne, die es im Repo nicht gibt, bleiben unberührt. */
+const REMOTE_URLS = ["plans.json", "https://raw.githubusercontent.com/MatthiasKoer/studio/main/plans.json"];
+let remote = null;
+async function fetchRemote(){
+  for(const u of REMOTE_URLS){
+    try{
+      const r = await fetch(u + (u.includes("?") ? "&" : "?") + "t=" + Date.now(), { cache: "no-store" });
+      if(!r.ok) continue;
+      const j = await r.json();
+      if(j && j.version && Array.isArray(j.plans)) return j;
+    }catch(e){}
+  }
+  return null;
+}
+async function checkRemote(){
+  const j = await fetchRemote();
+  if(!j || j.version === D.repoVersion || j.version === D.repoSkipped) return;
+  remote = j; render();
+}
+const normName = s => String(s||"").toLowerCase()
+  .replace(/ä/g,"ae").replace(/ö/g,"oe").replace(/ü/g,"ue").replace(/ß/g,"ss").replace(/[^a-z0-9]/g,"");
+/* Lokale Pläne zu einem Repo-Plan: gleicher Name oder Studio-Variante „Einheit A – Studio“ */
+const localPlansFor = rp => D.plans.filter(p => p.name === rp.name || (p.name||"").startsWith(rp.name + " – "));
+/* Lokaler Name, unter dem eine Repo-Übung schon existiert (für Umbenennen samt Verlauf) */
+function localNameFor(re){
+  const keys = new Set([re.name, ...(re.aliases||[])].map(normName));
+  const names = new Set();
+  D.plans.forEach(p => (p.exercises||[]).forEach(e => names.add(e.name)));
+  D.history.forEach(w => (w.exercises||[]).forEach(e => names.add(e.name)));
+  Object.keys(D.library).forEach(n => names.add(n));
+  if(names.has(re.name)) return re.name;
+  for(const n of names) if(keys.has(normName(n))) return n;
+  return null;
+}
+/* Was würde sich ändern? Für die Vorschau. */
+function remoteDiff(j){
+  const out = { renames: [], plans: [] };
+  const seen = new Set();
+  for(const rp of j.plans) for(const re of rp.exercises){
+    const ln = localNameFor(re);
+    if(ln && ln !== re.name && !seen.has(ln)){ seen.add(ln); out.renames.push([ln, re.name]); }
+  }
+  const ren = new Map(out.renames);
+  for(const rp of j.plans){
+    const locals = localPlansFor(rp);
+    const target = rp.exercises.map(e => e.name);
+    if(!locals.length){ out.plans.push({ name: rp.name, isNew: true, add: target, del: [], changed: [] }); continue; }
+    for(const lp of locals){
+      const cur = (lp.exercises||[]).map(e => ren.get(e.name) || e.name);
+      const changed = rp.exercises.filter(re => { const le = (lp.exercises||[]).find(e => (ren.get(e.name)||e.name) === re.name);
+        return le && (le.sets !== re.sets || le.reps !== re.reps); }).map(re => re.name + " → " + re.sets + " × " + re.reps);
+      out.plans.push({ name: lp.name, isNew: false,
+        add: target.filter(n => !cur.includes(n)), del: cur.filter(n => !target.includes(n)), changed });
+    }
+  }
+  return out;
+}
+function applyRemote(j){
+  for(const rp of j.plans) for(const re of rp.exercises){
+    const ln = localNameFor(re);
+    if(ln && ln !== re.name) renameExercise(ln, re.name);
+  }
+  for(const rp of j.plans){
+    let locals = localPlansFor(rp);
+    if(!locals.length){ const np = { id: uid(), name: rp.name, subtitle: "", mobility: [], exercises: [] }; D.plans.push(np); locals = [np]; }
+    for(const lp of locals){
+      const old = lp.exercises || [];
+      const w = old.filter(e => isWeight(e.unit));
+      const planUnit = w.filter(e => e.unit === "stufe").length > w.length/2 ? "stufe" : "kg";
+      lp.subtitle = rp.subtitle || lp.subtitle;
+      if(rp.mobility) lp.mobility = rp.mobility.slice();
+      lp.exercises = rp.exercises.map(re => {
+        const le = old.find(e => e.name === re.name);
+        const unit = re.unit || (le && isWeight(le.unit) ? le.unit : (D.units[re.name] && !isWeight(D.units[re.name]) ? D.units[re.name] : planUnit));
+        unhide(re.name);
+        return { id: le ? le.id : uid(), name: re.name, sets: re.sets, reps: re.reps, rest: re.rest, unit };
+      });
+    }
+  }
+  /* Ausführungshinweise: nur ersetzen, wenn leer oder noch der zuletzt übernommene Repo-Text */
+  if(!D.repoInfo) D.repoInfo = {};
+  for(const [name, text] of Object.entries(j.info || {})){
+    const det = detail(name);
+    if(!det.text.trim() || det.text === D.repoInfo[name]){
+      D.library[name] = { text, images: det.images || [] };
+      D.repoInfo[name] = text;
+    }
+  }
+  D.repoVersion = j.version;
+  delete D.repoSkipped;
+  remote = null;
+  save();
+}
+function remoteBanner(){
+  if(!remote) return "";
+  return `<div class="card" style="margin-bottom:14px;border:1.5px solid var(--blue)">
+    <div class="eyebrow">Neuer Planstand</div>
+    <div class="small" style="margin:6px 0 10px">${esc(remote.note || "Pläne wurden aktualisiert.")}</div>
+    <button class="btn" data-remoteshow>Änderungen ansehen</button>
+  </div>`;
+}
+function openRemoteSheet(){
+  const j = remote; if(!j) return;
+  const d = remoteDiff(j);
+  const li = (arr, sign) => arr.map(n => `<div class="small">${sign} ${esc(n)}</div>`).join("");
+  openSheet("Neuer Planstand", `
+    <p class="small muted" style="margin:0 0 12px">Stand ${esc(j.version)}. Verlauf, Gewichte und die
+      kg/Stufen-Einstellung pro Studio bleiben erhalten.</p>
+    ${d.renames.length ? `<div class="card"><div class="eyebrow">Umbenannt (Verlauf wird zusammengeführt)</div>
+      ${d.renames.map(([a,b]) => `<div class="small">${esc(a)} → ${esc(b)}</div>`).join("")}</div>` : ""}
+    ${d.plans.map(p => `<div class="card"><div class="eyebrow">${esc(p.name)}${p.isNew ? " (neu)" : ""}</div>
+      ${li(p.add, "+")}${li(p.del, "−")}${li(p.changed, "·")}
+      ${!p.add.length && !p.del.length && !p.changed.length ? '<div class="small muted">Übungen unverändert, Aufwärmen/Hinweise aktualisiert</div>' : ""}
+    </div>`).join("")}
+    <button class="btn" id="remoteok" style="margin-top:16px">Übernehmen</button>
+    <button class="btn ghost" id="remoteskip" style="margin-top:9px">Diesen Stand nicht übernehmen</button>
+  `, () => {
+    document.getElementById("remoteok").onclick = () => {
+      if(D.active && !confirm("Ein Training läuft gerade. Es bleibt unverändert; die neuen Pläne gelten ab dem nächsten Training. Übernehmen?")) return;
+      applyRemote(j); closeSheet();
+    };
+    document.getElementById("remoteskip").onclick = () => { D.repoSkipped = j.version; remote = null; save(); closeSheet(); };
+  });
+}
+
 function save(){
   try{ localStorage.setItem(KEY, JSON.stringify(D)); }
   catch(e){ alert("Speichern fehlgeschlagen. Vermutlich ist der Speicher voll — exportiere deine Daten unter Pläne."); }
@@ -624,6 +752,7 @@ function viewPicker(){
   return `<div class="wrap">
     <h1>Training</h1>
     <p class="small muted" style="margin:-8px 0 14px">${hint}</p>
+    ${remoteBanner()}
     ${D.plans.map(p => `
       <div class="card">
         <div class="between">
@@ -909,6 +1038,7 @@ function viewStats(){
 
 function viewPlans(){
   return `<div class="wrap"><h1>Pläne</h1>
+    ${remoteBanner()}
     <div class="card">
       ${D.plans.map((p,i) => `<div class="listitem between" data-plan="${i}">
         <div class="grow"><b style="font-size:16px;font-weight:600">${esc(p.name)}</b>
@@ -1377,6 +1507,7 @@ function bind(){
   });
 
   q("[data-archive]", b => b.onclick = openArchiveSheet);
+  q("[data-remoteshow]", b => b.onclick = openRemoteSheet);
   q("[data-export]", b => b.onclick = exportAll);
   q("[data-import]", b => b.onclick = () => document.getElementById("jsonpick").click());
 
@@ -1389,6 +1520,7 @@ function bind(){
 
 load();
 render();
+checkRemote();
 
 setInterval(() => {
   if(D.active && tab === "train" && !sheetStack.length && !document.hidden){

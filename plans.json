@@ -1,0 +1,82 @@
+{
+  "version": "2026-11-08",
+  "note": "Katze-Kuh und Chin Tucks im Aufwärmen, Face Pulls fest in Einheit A, Ausführungshinweise ergänzt.",
+  "plans": [
+    {
+      "name": "Einheit A",
+      "subtitle": "Hintere Kette + Rumpf",
+      "mobility": [
+        "Aufwärmen: 8–10 Min Stepper, Laufband oder Rad",
+        "Hüftbeuger-Dehnung (halber Kniestand) – 60 Sek pro Seite, rechts 2 Durchgänge",
+        "Beinpendel vor/zurück – 10× pro Seite",
+        "Hüftkreisen – 8× pro Richtung",
+        "Thoraxrotation sitzend – 10× pro Seite",
+        "Katze-Kuh – 8× langsam, unten nur bis neutral",
+        "Chin Tucks – 2 × 10, je 5 Sek halten",
+        "SCM-Dehnung links – 60 Sek"
+      ],
+      "exercises": [
+        { "name": "Rumänisches Kreuzheben Langhantel", "sets": 3, "reps": 10, "rest": 120,
+          "aliases": ["Rumänisches Kreuzheben", "Rumänisches Kreuzheben LH", "RDL"] },
+        { "name": "Goblet Squat", "sets": 3, "reps": 10, "rest": 90, "aliases": ["Goblet Sqat"] },
+        { "name": "Einbeiniges Kreuzheben rechts", "sets": 2, "reps": 10, "rest": 60,
+          "aliases": ["Einbein. Kreuzheben rechts", "Einbeiniges Kreuzheben"] },
+        { "name": "Hip Thrust", "sets": 3, "reps": 12, "rest": 90,
+          "aliases": ["Glute Bridge", "Hip Thrust / Glute Bridge", "Hip Thrust Glute Bridge"] },
+        { "name": "MTS High Row", "sets": 3, "reps": 10, "rest": 90, "aliases": ["High Row", "MTS Highrow"] },
+        { "name": "Kabelzug Rudern beidarmig", "sets": 3, "reps": 12, "rest": 60 },
+        { "name": "Pilates-Stuhl hintere Kette", "sets": 2, "reps": 8, "rest": 60,
+          "aliases": ["Pilatesstuhl hintere Kette", "Pilates Stuhl hintere Kette"] },
+        { "name": "Dead Bug", "sets": 3, "reps": 8, "rest": 45, "unit": "seite", "aliases": ["Dead Bugs", "Deadbug"] },
+        { "name": "Face Pull", "sets": 2, "reps": 15, "rest": 45, "aliases": ["Face Pulls", "Facepull"] }
+      ]
+    },
+    {
+      "name": "Einheit B",
+      "subtitle": "Oberkörper + Schulter",
+      "mobility": [
+        "Aufwärmen: 8–10 Min Stepper, Laufband oder Rad",
+        "Hüftbeuger-Dehnung (halber Kniestand) – 60 Sek pro Seite, rechts 2 Durchgänge",
+        "Beinpendel vor/zurück – 10× pro Seite",
+        "Hüftkreisen – 8× pro Richtung",
+        "Thoraxrotation sitzend – 10× pro Seite",
+        "Katze-Kuh – 8× langsam, unten nur bis neutral",
+        "Chin Tucks – 2 × 10, je 5 Sek halten",
+        "Brustöffnung an der Wand – 60 Sek",
+        "SCM-Dehnung links – 60 Sek"
+      ],
+      "exercises": [
+        { "name": "Brustpresse", "sets": 3, "reps": 10, "rest": 90,
+          "aliases": ["Brustpresse Maschine", "Schrägbank Kurzhantel", "Schrägbankdrücken Kurzhantel", "Brustpresse / Schrägbank KH"] },
+        { "name": "Kabelzug Rudern einarmig links", "sets": 3, "reps": 12, "rest": 30 },
+        { "name": "Kabelzug Rudern einarmig rechts", "sets": 3, "reps": 10, "rest": 60 },
+        { "name": "MTS High Row", "sets": 2, "reps": 10, "rest": 90, "aliases": ["High Row", "MTS Highrow"] },
+        { "name": "Schulterdrücken Kurzhantel einarmig rechts", "sets": 2, "reps": 10, "rest": 90 },
+        { "name": "Seitheben Kabelzug beidseits", "sets": 3, "reps": 12, "rest": 0, "aliases": ["Seitheben Kabelzug"] },
+        { "name": "Face Pull", "sets": 3, "reps": 15, "rest": 60, "aliases": ["Face Pulls", "Facepull"] },
+        { "name": "Bizeps Kurzhantel", "sets": 2, "reps": 12, "rest": 0 },
+        { "name": "Trizeps Kabelzug", "sets": 2, "reps": 12, "rest": 60 },
+        { "name": "Pallof Press", "sets": 3, "reps": 10, "rest": 45, "unit": "seite", "aliases": ["Pallof-Press", "Paloff Press"] }
+      ]
+    }
+  ],
+  "info": {
+    "Rumänisches Kreuzheben Langhantel": "Rücken neutral, Becken „unter dir“, Hüfte nach hinten schieben. Oben endet die Bewegung durch Gesäßanspannung, nicht durch Zurücklehnen (Hohlkreuz). Nur so tief, wie die Hüfte sauber mitgeht. Meldet sich der Rücken mittig: Gewicht runter.\n\nWarum: kräftigt die steife hintere Kette, ohne die Lendenwirbelsäule zu überstrecken.",
+    "Goblet Squat": "Aufrecht, Knie folgen den Zehen, Rippen unten. Nur so tief, wie das Becken nicht abkippt.\n\nWarum: Beinkraft mit aufrechtem Oberkörper, schult die Beckenkontrolle.",
+    "Einbeiniges Kreuzheben rechts": "Linke Hand zur Stabilisierung an die Wand. Becken bleibt waagerecht, nicht aufdrehen.\n\nWarum: gezielt für die steife rechte hintere Kette und Hüfte (asymmetrische Phase).",
+    "Hip Thrust": "Oben 2 Sek halten, Gesäß fest, Rippen unten – kein Hohlkreuz in der Endposition. Option: 1–2 Sätze einbeinig rechts.\n\nWarum: kräftigt das Gesäß und richtet das Becken auf – direkt gegen das Hohlkreuz.",
+    "MTS High Row": "Erst Schulterblätter nach hinten-unten, dann Ellbogen ziehen. Schultern tief, langsam zurückführen.\n\nWarum: trainiert Rhomboiden und mittleren Trapez – Gegenspieler zu vorgerollten Schultern und Kopf-nach-vorn.",
+    "Kabelzug Rudern beidarmig": "Schulterblätter zuerst, Ellbogen eng zur Hüfte, langsam zurück.\n\nWarum: Haltung im oberen Rücken, entlastet Nacken/SCM.",
+    "Pilates-Stuhl hintere Kette": "Kontrolliert, ohne Schwung, Becken neutral.\n\nWarum: hintere Kette mit viel Kontrolle und wenig Last auf der Wirbelsäule.",
+    "Dead Bug": "Unterer Rücken bleibt am Boden, Kopf abgelegt. Gegenarm und -bein langsam strecken, dabei ausatmen.\n\nWarum: Rumpfstabilität ohne Hohlkreuz und ohne Druck auf den Bauch (Reflux); der abgelegte Kopf schont den SCM.",
+    "Face Pull": "Seil auf Gesichtshöhe, Ellbogen hoch und nach hinten, Schulterblätter zusammen. Schultern tief, langsam zurück.\n\nWarum: Gegenspieler zu vorgerollten Schultern und Kopf-nach-vorn – entlastet den überspannten SCM.",
+    "Brustpresse": "Schulterblätter zurück und tief, Schultern rollen nicht nach vorn. Alternativ Schrägbank Kurzhantel.\n\nWarum: Druckkraft, ohne die Schultern in die Vorhaltung zu ziehen.",
+    "Kabelzug Rudern einarmig links": "Direkt im Wechsel mit rechts, ohne Pause dazwischen. Schulterblatt zuerst, Schulter tief.\n\nWarum: links mehr Volumen (12 statt 10) als Ausgleich der Asymmetrie.",
+    "Kabelzug Rudern einarmig rechts": "Direkt im Wechsel mit links. Schulterblatt zuerst, Schulter tief.\n\nWarum: Teil des asymmetrischen Ruderns – rechts etwas weniger Volumen.",
+    "Schulterdrücken Kurzhantel einarmig rechts": "Nur rechts. Rumpf fest, Rippen unten, kein Hohlkreuz beim Drücken.\n\nWarum: schont die linke Nacken-/SCM-Seite.",
+    "Seitheben Kabelzug beidseits": "Supersatz mit Face Pull: direkt danach Face Pull, dann Pause. Max. bis Schulterhöhe, Schulter nicht hochziehen.\n\nWarum: Schulterbreite für die Optik, ohne Nackenspannung.",
+    "Bizeps Kurzhantel": "Supersatz mit Trizeps: direkt danach Trizeps, dann Pause. Ellbogen fixiert, Schultern tief.",
+    "Trizeps Kabelzug": "Zweiter Teil des Supersatzes mit Bizeps. Ellbogen eng, Schultern tief.",
+    "Pallof Press": "Seitlich zum Kabel, Griff vor der Brust nach vorn drücken, 2 Sek halten, Rumpf dreht nicht mit. Gesäß fest, Rippen unten.\n\nWarum: Stabilität gegen Rotation – passt zum diagonalen Muster; kein Hohlkreuz, kein Druck auf den Bauch."
+  }
+}
