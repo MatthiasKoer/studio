@@ -918,16 +918,32 @@ function render(){
 
 /* --- Auswahl --- */
 
-function suggestedPlan(){
+/* Welche Einheit ist dran? Studio-Varianten zählen als dieselbe Einheit:
+   „Einheit B“ und „Einheit B – S53“ (oder „Einheit B S53“) gehören zusammen. */
+function planBase(p){
+  const n = (p && p.name) || "";
+  const shorter = D.plans.map(x => x.name || "").filter(x => x && x !== n && (n.startsWith(x + " ") || n.startsWith(x + "–")))
+    .sort((a,b) => a.length - b.length)[0];
+  return normName(shorter || n.split(/ [–-] /)[0]);
+}
+function suggestedBase(){
   if(!D.plans.length) return null;
-  let best = D.plans[0], bestAt = Infinity;
+  const last = {};
+  for(const w of D.history){
+    const p = D.plans.find(x => x.id === w.planId);
+    if(!p) continue;
+    const b = planBase(p);
+    if(!(b in last) || w.start > last[b]) last[b] = w.start;
+  }
+  let best = null, bestAt = Infinity;
   for(const p of D.plans){
-    const w = D.history.find(x => x.planId === p.id);
-    const at = w ? w.start : 0;
-    if(at < bestAt){ bestAt = at; best = p; }
+    const b = planBase(p), at = last[b] || 0;
+    if(at < bestAt){ bestAt = at; best = b; }
   }
   return best;
 }
+/* für Aufrufer, die einen Plan erwarten: erster Plan der fälligen Einheit */
+function suggestedPlan(){ const b = suggestedBase(); return b === null ? null : D.plans.find(p => planBase(p) === b) || null; }
 function daysSince(){
   if(!D.history.length) return null;
   const last = Math.max.apply(null, D.history.map(w => w.start));
@@ -979,7 +995,7 @@ function mobCard(w){
 }
 
 function viewPicker(){
-  const sug = suggestedPlan();
+  const sugBase = suggestedBase();
   const ds = daysSince();
   const hint = ds === null ? "Noch kein Training gespeichert."
     : ds === 0 ? "Heute schon trainiert."
@@ -997,7 +1013,7 @@ function viewPicker(){
             <h2>${esc(p.name)}</h2>
             <div class="small muted">${esc(p.subtitle||"")}</div>
           </div>
-          ${sug && sug.id===p.id ? '<span class="pill">dran</span>' : ""}
+          ${sugBase !== null && planBase(p) === sugBase ? '<span class="pill">dran</span>' : ""}
         </div>
         <hr>
         ${p.exercises.map(e => `<div class="between small" style="padding:2px 0">
