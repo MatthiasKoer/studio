@@ -110,6 +110,13 @@ hr{border:0;border-top:1px solid var(--line);margin:12px 0}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:9px}
 .grid img{width:100%;height:96px;object-fit:cover;border-radius:10px}
 .imgbox{position:relative}
+.imgbox img,.thumbs img{cursor:zoom-in}
+#lightbox{position:fixed;inset:0;z-index:100;background:#000;display:none;touch-action:none;user-select:none;-webkit-user-select:none;overflow:hidden}
+#lightbox.show{display:block}
+#lightbox img{position:absolute;left:50%;top:50%;width:100vw;height:100vh;object-fit:contain;transform-origin:center center;will-change:transform;-webkit-user-drag:none}
+#lbclose{position:absolute;top:calc(10px + env(safe-area-inset-top));right:14px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.18);color:#fff;font-size:22px;line-height:38px;text-align:center;z-index:2}
+#lbcount{position:absolute;bottom:calc(16px + env(safe-area-inset-bottom));left:0;right:0;text-align:center;color:rgba(255,255,255,.75);font-size:13px;z-index:2}
+#lbhint{position:absolute;top:calc(18px + env(safe-area-inset-top));left:16px;color:rgba(255,255,255,.6);font-size:12px;z-index:2}
 .imgbox .del{position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,.62);color:#fff;font-size:15px;line-height:24px;text-align:center}
 
 .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px}
@@ -149,6 +156,7 @@ label.lbl{display:block;font-size:13px;color:var(--tx2);margin:14px 0 5px}
 
 <nav class="tabbar" id="tabbar"></nav>
 
+<div id="lightbox"><button id="lbclose" aria-label="Schließen">×</button><div id="lbhint">Doppeltippen oder mit zwei Fingern zoomen</div><img id="lbimg" alt=""><div id="lbcount"></div></div>
 <div class="sheet" id="sheet">
   <div class="sheethead">
     <button id="sheetclose">Fertig</button>
@@ -1042,7 +1050,7 @@ async function hydrateThumbs(){
     const frag = document.createDocumentFragment();
     for(const src of srcs){
       const im = new Image(); im.src = src; im.decoding = "sync";
-      im.onclick = () => openDetailSheet(name);
+      im.onclick = () => openLightbox(srcs, srcs.indexOf(src));
       frag.appendChild(im);
     }
     box.replaceChildren(frag);
@@ -1718,6 +1726,7 @@ async function paintDetailGrid(){
       await imgDel(id);
       paintDetailGrid();
     };
+    im.onclick = () => openLightboxIds(det.images, det.images.indexOf(id));
     box.appendChild(im); box.appendChild(del);
     g.appendChild(box);
   }
@@ -1737,6 +1746,87 @@ document.getElementById("filepick").onchange = async ev => {
   }
   paintDetailGrid();
 };
+
+/* ---------- Bild-Vollansicht (Zoom, Wischen) ---------- */
+const LB = { srcs: [], i: 0, s: 1, x: 0, y: 0 };
+function lbApply(anim){
+  const im = document.getElementById("lbimg");
+  im.style.transition = anim ? "transform .2s ease" : "none";
+  im.style.transform = `translate(calc(-50% + ${LB.x}px), calc(-50% + ${LB.y}px)) scale(${LB.s})`;
+}
+function lbShow(i){
+  LB.i = (i + LB.srcs.length) % LB.srcs.length; LB.s = 1; LB.x = 0; LB.y = 0;
+  document.getElementById("lbimg").src = LB.srcs[LB.i];
+  document.getElementById("lbcount").textContent = LB.srcs.length > 1 ? (LB.i + 1) + " / " + LB.srcs.length + " · wischen für weitere" : "";
+  lbApply(false);
+}
+function openLightbox(srcs, i){
+  if(!srcs || !srcs.length) return;
+  LB.srcs = srcs; document.getElementById("lightbox").classList.add("show"); lbShow(Math.max(0, i));
+}
+async function openLightboxIds(ids, i){
+  const srcs = [];
+  for(const id of ids){ if(!thumbCache.has(id)) thumbCache.set(id, await imgGet(id)); const s = thumbCache.get(id); if(s) srcs.push(s); }
+  openLightbox(srcs, i);
+}
+function closeLightbox(){ document.getElementById("lightbox").classList.remove("show"); document.getElementById("lbimg").removeAttribute("src"); }
+/* Verschieben begrenzen, damit das gezoomte Bild nicht aus dem Bildschirm rutscht */
+function lbClamp(){
+  const im = document.getElementById("lbimg");
+  const w = im.offsetWidth * LB.s, h = im.offsetHeight * LB.s;
+  const mx = Math.max(0, (w - innerWidth) / 2), my = Math.max(0, (h - innerHeight) / 2);
+  LB.x = Math.min(mx, Math.max(-mx, LB.x)); LB.y = Math.min(my, Math.max(-my, LB.y));
+}
+(() => {
+  const el = document.getElementById("lightbox");
+  let start = null, lastTap = 0, moved = false;
+  const dist = t => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+  document.getElementById("lbclose").onclick = ev => { ev.stopPropagation(); closeLightbox(); };
+  el.addEventListener("touchstart", ev => {
+    const t = ev.touches; moved = false;
+    if(t.length === 2) start = { pinch: true, d: dist(t), s: LB.s };
+    else if(t.length === 1) start = { pinch: false, px: t[0].clientX, py: t[0].clientY, x: LB.x, y: LB.y };
+  }, { passive: true });
+  el.addEventListener("touchmove", ev => {
+    if(!start) return;
+    const t = ev.touches; ev.preventDefault();
+    if(start.pinch && t.length === 2){ LB.s = Math.min(5, Math.max(1, start.s * dist(t) / start.d)); moved = true; lbClamp(); lbApply(false); }
+    else if(!start.pinch && t.length === 1){
+      const dx = t[0].clientX - start.px, dy = t[0].clientY - start.py;
+      if(Math.abs(dx) + Math.abs(dy) > 8) moved = true;
+      if(LB.s > 1){ LB.x = start.x + dx; LB.y = start.y + dy; lbClamp(); }
+      else { LB.x = dx; LB.y = Math.max(0, dy); }
+      lbApply(false);
+    }
+  }, { passive: false });
+  el.addEventListener("touchend", ev => {
+    if(!start || ev.touches.length) return;
+    const s0 = start; start = null;
+    if(!s0.pinch && LB.s === 1 && moved){
+      /* nach unten wischen schließt, seitlich wechselt das Bild */
+      if(LB.y > 110){ closeLightbox(); return; }
+      if(Math.abs(LB.x) > 70 && LB.srcs.length > 1){ lbShow(LB.i + (LB.x < 0 ? 1 : -1)); return; }
+      LB.x = 0; LB.y = 0; lbApply(true); return;
+    }
+    if(LB.s < 1.05){ LB.s = 1; LB.x = 0; LB.y = 0; lbApply(true); }
+    if(!moved){
+      const now = Date.now();
+      if(now - lastTap < 300){ /* Doppeltipp: 2,5× zoomen bzw. zurück */
+        if(LB.s > 1){ LB.s = 1; LB.x = 0; LB.y = 0; } else LB.s = 2.5;
+        lbClamp(); lbApply(true); lastTap = 0;
+      } else lastTap = now;
+    }
+  });
+  /* Maus: Klick neben das Bild schließt, Doppelklick zoomt */
+  el.addEventListener("click", ev => { if(ev.target === el) closeLightbox(); });
+  el.addEventListener("dblclick", () => { LB.s = LB.s > 1 ? 1 : 2.5; LB.x = 0; LB.y = 0; lbApply(true); });
+  document.addEventListener("keydown", ev => {
+    if(!el.classList.contains("show")) return;
+    if(ev.key === "Escape") closeLightbox();
+    if(ev.key === "ArrowRight") lbShow(LB.i + 1);
+    if(ev.key === "ArrowLeft") lbShow(LB.i - 1);
+  });
+})();
 
 /* --- Export & Import --- */
 
