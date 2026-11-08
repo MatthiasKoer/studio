@@ -641,6 +641,7 @@ function renameExercise(from, to){
   }
   if(D.units[from]){ if(!D.units[to]) D.units[to] = D.units[from]; delete D.units[from]; }
   for(const c of [D.cats, D.repoCats]) if(c && c[from]){ if(!c[to]) c[to] = c[from]; delete c[from]; }
+  if(D.repoInfo && D.repoInfo[from] !== undefined){ if(D.repoInfo[to] === undefined) D.repoInfo[to] = D.repoInfo[from]; delete D.repoInfo[from]; }
   unhide(to);
   D.hidden = (D.hidden||[]).filter(n => n !== from);
   if(statPick === from) statPick = to;
