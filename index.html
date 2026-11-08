@@ -267,6 +267,23 @@ const normName = s => String(s||"").toLowerCase()
   .replace(/ä/g,"ae").replace(/ö/g,"oe").replace(/ü/g,"ue").replace(/ß/g,"ss").replace(/[^a-z0-9]/g,"");
 /* Lokale Pläne zu einem Repo-Plan: gleicher Name oder Studio-Variante „Einheit A – Studio“ */
 const localPlansFor = rp => D.plans.filter(p => p.name === rp.name || (p.name||"").startsWith(rp.name + " – "));
+/* Übungen eines Repo-Plans für einen lokalen Plan. Eine Übung kann pro Studio ersetzt
+   oder weggelassen werden: "studios": { "S53": { "name": "…" } } bzw. { "S53": null }.
+   Das Studio ist der Namenszusatz des lokalen Plans („Einheit A – S53“). */
+const studioOf = lp => { const m = / – (.+)$/.exec((lp && lp.name) || ""); return m ? normName(m[1]) : ""; };
+function planExercises(rp, lp){
+  const st = studioOf(lp), out = [];
+  for(const re of rp.exercises){
+    const key = st && re.studios ? Object.keys(re.studios).find(k => normName(k) === st) : undefined;
+    if(key === undefined){ out.push(re); continue; }
+    const alt = re.studios[key];
+    if(alt) out.push(Object.assign({}, re, { aliases: [] }, alt));
+  }
+  return out;
+}
+/* Alle Repo-Übungen inkl. Studio-Ersatz (für das Umbenennen) */
+const allRemoteEx = j => j.plans.flatMap(rp => [...rp.exercises,
+  ...rp.exercises.flatMap(re => Object.values(re.studios || {}).filter(Boolean).map(alt => Object.assign({}, re, { aliases: [] }, alt)))]);
 /* Lokaler Name, unter dem eine Repo-Übung schon existiert (für Umbenennen samt Verlauf) */
 function localNameFor(re){
   const keys = new Set([re.name, ...(re.aliases||[])].map(normName));
@@ -282,18 +299,18 @@ function localNameFor(re){
 function remoteDiff(j){
   const out = { renames: [], plans: [] };
   const seen = new Set();
-  for(const rp of j.plans) for(const re of rp.exercises){
+  for(const re of allRemoteEx(j)){
     const ln = localNameFor(re);
     if(ln && ln !== re.name && !seen.has(ln)){ seen.add(ln); out.renames.push([ln, re.name]); }
   }
   const ren = new Map(out.renames);
   for(const rp of j.plans){
     const locals = localPlansFor(rp);
-    const target = rp.exercises.map(e => e.name);
-    if(!locals.length){ out.plans.push({ name: rp.name, isNew: true, add: target, del: [], changed: [] }); continue; }
+    if(!locals.length){ out.plans.push({ name: rp.name, isNew: true, add: planExercises(rp, null).map(e => e.name), del: [], changed: [] }); continue; }
     for(const lp of locals){
+      const rex = planExercises(rp, lp), target = rex.map(e => e.name);
       const cur = (lp.exercises||[]).map(e => ren.get(e.name) || e.name);
-      const changed = rp.exercises.filter(re => { const le = (lp.exercises||[]).find(e => (ren.get(e.name)||e.name) === re.name);
+      const changed = rex.filter(re => { const le = (lp.exercises||[]).find(e => (ren.get(e.name)||e.name) === re.name);
         return le && (le.sets !== re.sets || le.reps !== re.reps); }).map(re => re.name + " → " + re.sets + " × " + re.reps);
       out.plans.push({ name: lp.name, isNew: false,
         add: target.filter(n => !cur.includes(n)), del: cur.filter(n => !target.includes(n)), changed });
@@ -302,7 +319,7 @@ function remoteDiff(j){
   return out;
 }
 function applyRemote(j){
-  for(const rp of j.plans) for(const re of rp.exercises){
+  for(const re of allRemoteEx(j)){
     const ln = localNameFor(re);
     if(ln && ln !== re.name) renameExercise(ln, re.name);
   }
@@ -315,7 +332,7 @@ function applyRemote(j){
       const planUnit = w.filter(e => e.unit === "stufe").length > w.length/2 ? "stufe" : "kg";
       lp.subtitle = rp.subtitle || lp.subtitle;
       if(rp.mobility) lp.mobility = rp.mobility.slice();
-      lp.exercises = rp.exercises.map(re => {
+      lp.exercises = planExercises(rp, lp).map(re => {
         const le = old.find(e => e.name === re.name);
         const unit = re.unit || (le && isWeight(le.unit) ? le.unit : (D.units[re.name] && !isWeight(D.units[re.name]) ? D.units[re.name] : planUnit));
         unhide(re.name);

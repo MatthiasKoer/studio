@@ -1,6 +1,6 @@
 {
-  "version": "2026-11-08",
-  "note": "Katze-Kuh und Chin Tucks im Aufwärmen, Face Pulls fest in Einheit A, Ausführungshinweise ergänzt.",
+  "version": "2026-11-08b",
+  "note": "Katze-Kuh und Chin Tucks im Aufwärmen, Face Pulls fest in Einheit A, Ausführungshinweise ergänzt. Im S53 ersetzt hohes Rudern am Kabelzug die MTS High Row.",
   "plans": [
     {
       "name": "Einheit A",
@@ -16,19 +16,104 @@
         "SCM-Dehnung links – 60 Sek"
       ],
       "exercises": [
-        { "name": "Rumänisches Kreuzheben Langhantel", "sets": 3, "reps": 10, "rest": 120,
-          "aliases": ["Rumänisches Kreuzheben", "Rumänisches Kreuzheben LH", "RDL"] },
-        { "name": "Goblet Squat", "sets": 3, "reps": 10, "rest": 90, "aliases": ["Goblet Sqat"] },
-        { "name": "Einbeiniges Kreuzheben rechts", "sets": 2, "reps": 10, "rest": 60,
-          "aliases": ["Einbein. Kreuzheben rechts", "Einbeiniges Kreuzheben"] },
-        { "name": "Hip Thrust", "sets": 3, "reps": 12, "rest": 90,
-          "aliases": ["Glute Bridge", "Hip Thrust / Glute Bridge", "Hip Thrust Glute Bridge"] },
-        { "name": "MTS High Row", "sets": 3, "reps": 10, "rest": 90, "aliases": ["High Row", "MTS Highrow"] },
-        { "name": "Kabelzug Rudern beidarmig", "sets": 3, "reps": 12, "rest": 60 },
-        { "name": "Pilates-Stuhl hintere Kette", "sets": 2, "reps": 8, "rest": 60,
-          "aliases": ["Pilatesstuhl hintere Kette", "Pilates Stuhl hintere Kette"] },
-        { "name": "Dead Bug", "sets": 3, "reps": 8, "rest": 45, "unit": "seite", "aliases": ["Dead Bugs", "Deadbug"] },
-        { "name": "Face Pull", "sets": 2, "reps": 15, "rest": 45, "aliases": ["Face Pulls", "Facepull"] }
+        {
+          "name": "Rumänisches Kreuzheben Langhantel",
+          "sets": 3,
+          "reps": 10,
+          "rest": 120,
+          "aliases": [
+            "Rumänisches Kreuzheben",
+            "Rumänisches Kreuzheben LH",
+            "RDL"
+          ]
+        },
+        {
+          "name": "Goblet Squat",
+          "sets": 3,
+          "reps": 10,
+          "rest": 90,
+          "aliases": [
+            "Goblet Sqat"
+          ]
+        },
+        {
+          "name": "Einbeiniges Kreuzheben rechts",
+          "sets": 2,
+          "reps": 10,
+          "rest": 60,
+          "aliases": [
+            "Einbein. Kreuzheben rechts",
+            "Einbeiniges Kreuzheben"
+          ]
+        },
+        {
+          "name": "Hip Thrust",
+          "sets": 3,
+          "reps": 12,
+          "rest": 90,
+          "aliases": [
+            "Glute Bridge",
+            "Hip Thrust / Glute Bridge",
+            "Hip Thrust Glute Bridge"
+          ]
+        },
+        {
+          "name": "MTS High Row",
+          "sets": 3,
+          "reps": 10,
+          "rest": 90,
+          "aliases": [
+            "High Row",
+            "MTS Highrow"
+          ],
+          "studios": {
+            "S53": {
+              "name": "Hohes Rudern Kabelzug",
+              "aliases": [
+                "Kabelzug hohes Rudern",
+                "High Row Kabelzug",
+                "Hohes Rudern"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Kabelzug Rudern beidarmig",
+          "sets": 3,
+          "reps": 12,
+          "rest": 60
+        },
+        {
+          "name": "Pilates-Stuhl hintere Kette",
+          "sets": 2,
+          "reps": 8,
+          "rest": 60,
+          "aliases": [
+            "Pilatesstuhl hintere Kette",
+            "Pilates Stuhl hintere Kette"
+          ]
+        },
+        {
+          "name": "Dead Bug",
+          "sets": 3,
+          "reps": 8,
+          "rest": 45,
+          "unit": "seite",
+          "aliases": [
+            "Dead Bugs",
+            "Deadbug"
+          ]
+        },
+        {
+          "name": "Face Pull",
+          "sets": 2,
+          "reps": 15,
+          "rest": 45,
+          "aliases": [
+            "Face Pulls",
+            "Facepull"
+          ]
+        }
       ]
     },
     {
@@ -46,17 +131,98 @@
         "SCM-Dehnung links – 60 Sek"
       ],
       "exercises": [
-        { "name": "Brustpresse", "sets": 3, "reps": 10, "rest": 90,
-          "aliases": ["Brustpresse Maschine", "Schrägbank Kurzhantel", "Schrägbankdrücken Kurzhantel", "Brustpresse / Schrägbank KH"] },
-        { "name": "Kabelzug Rudern einarmig links", "sets": 3, "reps": 12, "rest": 30 },
-        { "name": "Kabelzug Rudern einarmig rechts", "sets": 3, "reps": 10, "rest": 60 },
-        { "name": "MTS High Row", "sets": 2, "reps": 10, "rest": 90, "aliases": ["High Row", "MTS Highrow"] },
-        { "name": "Schulterdrücken Kurzhantel einarmig rechts", "sets": 2, "reps": 10, "rest": 90 },
-        { "name": "Seitheben Kabelzug beidseits", "sets": 3, "reps": 12, "rest": 0, "aliases": ["Seitheben Kabelzug"] },
-        { "name": "Face Pull", "sets": 3, "reps": 15, "rest": 60, "aliases": ["Face Pulls", "Facepull"] },
-        { "name": "Bizeps Kurzhantel", "sets": 2, "reps": 12, "rest": 0 },
-        { "name": "Trizeps Kabelzug", "sets": 2, "reps": 12, "rest": 60 },
-        { "name": "Pallof Press", "sets": 3, "reps": 10, "rest": 45, "unit": "seite", "aliases": ["Pallof-Press", "Paloff Press"] }
+        {
+          "name": "Brustpresse",
+          "sets": 3,
+          "reps": 10,
+          "rest": 90,
+          "aliases": [
+            "Brustpresse Maschine",
+            "Schrägbank Kurzhantel",
+            "Schrägbankdrücken Kurzhantel",
+            "Brustpresse / Schrägbank KH"
+          ]
+        },
+        {
+          "name": "Kabelzug Rudern einarmig links",
+          "sets": 3,
+          "reps": 12,
+          "rest": 30
+        },
+        {
+          "name": "Kabelzug Rudern einarmig rechts",
+          "sets": 3,
+          "reps": 10,
+          "rest": 60
+        },
+        {
+          "name": "MTS High Row",
+          "sets": 2,
+          "reps": 10,
+          "rest": 90,
+          "aliases": [
+            "High Row",
+            "MTS Highrow"
+          ],
+          "studios": {
+            "S53": {
+              "name": "Hohes Rudern Kabelzug",
+              "aliases": [
+                "Kabelzug hohes Rudern",
+                "High Row Kabelzug",
+                "Hohes Rudern"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Schulterdrücken Kurzhantel einarmig rechts",
+          "sets": 2,
+          "reps": 10,
+          "rest": 90
+        },
+        {
+          "name": "Seitheben Kabelzug beidseits",
+          "sets": 3,
+          "reps": 12,
+          "rest": 0,
+          "aliases": [
+            "Seitheben Kabelzug"
+          ]
+        },
+        {
+          "name": "Face Pull",
+          "sets": 3,
+          "reps": 15,
+          "rest": 60,
+          "aliases": [
+            "Face Pulls",
+            "Facepull"
+          ]
+        },
+        {
+          "name": "Bizeps Kurzhantel",
+          "sets": 2,
+          "reps": 12,
+          "rest": 0
+        },
+        {
+          "name": "Trizeps Kabelzug",
+          "sets": 2,
+          "reps": 12,
+          "rest": 60
+        },
+        {
+          "name": "Pallof Press",
+          "sets": 3,
+          "reps": 10,
+          "rest": 45,
+          "unit": "seite",
+          "aliases": [
+            "Pallof-Press",
+            "Paloff Press"
+          ]
+        }
       ]
     }
   ],
@@ -77,6 +243,7 @@
     "Seitheben Kabelzug beidseits": "Supersatz mit Face Pull: direkt danach Face Pull, dann Pause. Max. bis Schulterhöhe, Schulter nicht hochziehen.\n\nWarum: Schulterbreite für die Optik, ohne Nackenspannung.",
     "Bizeps Kurzhantel": "Supersatz mit Trizeps: direkt danach Trizeps, dann Pause. Ellbogen fixiert, Schultern tief.",
     "Trizeps Kabelzug": "Zweiter Teil des Supersatzes mit Bizeps. Ellbogen eng, Schultern tief.",
-    "Pallof Press": "Seitlich zum Kabel, Griff vor der Brust nach vorn drücken, 2 Sek halten, Rumpf dreht nicht mit. Gesäß fest, Rippen unten.\n\nWarum: Stabilität gegen Rotation – passt zum diagonalen Muster; kein Hohlkreuz, kein Druck auf den Bauch."
+    "Pallof Press": "Seitlich zum Kabel, Griff vor der Brust nach vorn drücken, 2 Sek halten, Rumpf dreht nicht mit. Gesäß fest, Rippen unten.\n\nWarum: Stabilität gegen Rotation – passt zum diagonalen Muster; kein Hohlkreuz, kein Druck auf den Bauch.",
+    "Hohes Rudern Kabelzug": "Ersatz für die MTS High Row im S53. Kabel oben oder auf Brusthöhe, sitzend oder kniend. Erst Schulterblätter nach hinten-unten, dann Ellbogen leicht nach außen zur oberen Brust ziehen. Schultern tief, langsam zurück.\n\nWarum: gleiche Zugrichtung wie die High Row – Rhomboiden und mittlerer Trapez gegen vorgerollte Schultern und Kopf-nach-vorn."
   }
 }
