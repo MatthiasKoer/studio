@@ -1,6 +1,6 @@
 {
-  "version": "2026-11-08b",
-  "note": "Katze-Kuh und Chin Tucks im Aufwärmen, Face Pulls fest in Einheit A, Ausführungshinweise ergänzt. Im S53 ersetzt hohes Rudern am Kabelzug die MTS High Row.",
+  "version": "2026-11-08c",
+  "note": "Pilates-Stuhl heißt jetzt „FIVE hintere Kette“ (Verlauf bleibt). Im S53 hohes Rudern am Kabelzug statt MTS High Row bzw. Lat Pulldown. Katze-Kuh, Chin Tucks, Face Pulls in A.",
   "plans": [
     {
       "name": "Einheit A",
@@ -84,13 +84,15 @@
           "rest": 60
         },
         {
-          "name": "Pilates-Stuhl hintere Kette",
+          "name": "FIVE hintere Kette",
           "sets": 2,
           "reps": 8,
           "rest": 60,
           "aliases": [
+            "Pilates-Stuhl hintere Kette",
             "Pilatesstuhl hintere Kette",
-            "Pilates Stuhl hintere Kette"
+            "Pilates Stuhl hintere Kette",
+            "FIVE"
           ]
         },
         {
@@ -233,7 +235,6 @@
     "Hip Thrust": "Oben 2 Sek halten, Gesäß fest, Rippen unten – kein Hohlkreuz in der Endposition. Option: 1–2 Sätze einbeinig rechts.\n\nWarum: kräftigt das Gesäß und richtet das Becken auf – direkt gegen das Hohlkreuz.",
     "MTS High Row": "Erst Schulterblätter nach hinten-unten, dann Ellbogen ziehen. Schultern tief, langsam zurückführen.\n\nWarum: trainiert Rhomboiden und mittleren Trapez – Gegenspieler zu vorgerollten Schultern und Kopf-nach-vorn.",
     "Kabelzug Rudern beidarmig": "Schulterblätter zuerst, Ellbogen eng zur Hüfte, langsam zurück.\n\nWarum: Haltung im oberen Rücken, entlastet Nacken/SCM.",
-    "Pilates-Stuhl hintere Kette": "Kontrolliert, ohne Schwung, Becken neutral.\n\nWarum: hintere Kette mit viel Kontrolle und wenig Last auf der Wirbelsäule.",
     "Dead Bug": "Unterer Rücken bleibt am Boden, Kopf abgelegt. Gegenarm und -bein langsam strecken, dabei ausatmen.\n\nWarum: Rumpfstabilität ohne Hohlkreuz und ohne Druck auf den Bauch (Reflux); der abgelegte Kopf schont den SCM.",
     "Face Pull": "Seil auf Gesichtshöhe, Ellbogen hoch und nach hinten, Schulterblätter zusammen. Schultern tief, langsam zurück.\n\nWarum: Gegenspieler zu vorgerollten Schultern und Kopf-nach-vorn – entlastet den überspannten SCM.",
     "Brustpresse": "Schulterblätter zurück und tief, Schultern rollen nicht nach vorn. Alternativ Schrägbank Kurzhantel.\n\nWarum: Druckkraft, ohne die Schultern in die Vorhaltung zu ziehen.",
@@ -244,6 +245,7 @@
     "Bizeps Kurzhantel": "Supersatz mit Trizeps: direkt danach Trizeps, dann Pause. Ellbogen fixiert, Schultern tief.",
     "Trizeps Kabelzug": "Zweiter Teil des Supersatzes mit Bizeps. Ellbogen eng, Schultern tief.",
     "Pallof Press": "Seitlich zum Kabel, Griff vor der Brust nach vorn drücken, 2 Sek halten, Rumpf dreht nicht mit. Gesäß fest, Rippen unten.\n\nWarum: Stabilität gegen Rotation – passt zum diagonalen Muster; kein Hohlkreuz, kein Druck auf den Bauch.",
-    "Hohes Rudern Kabelzug": "Ersatz für die MTS High Row im S53. Kabel oben oder auf Brusthöhe, sitzend oder kniend. Erst Schulterblätter nach hinten-unten, dann Ellbogen leicht nach außen zur oberen Brust ziehen. Schultern tief, langsam zurück.\n\nWarum: gleiche Zugrichtung wie die High Row – Rhomboiden und mittlerer Trapez gegen vorgerollte Schultern und Kopf-nach-vorn."
+    "Hohes Rudern Kabelzug": "Ersatz für die MTS High Row im S53. Kabel oben oder auf Brusthöhe, sitzend oder kniend. Erst Schulterblätter nach hinten-unten, dann Ellbogen leicht nach außen zur oberen Brust ziehen. Schultern tief, langsam zurück.\n\nWarum: gleiche Zugrichtung wie die High Row – Rhomboiden und mittlerer Trapez gegen vorgerollte Schultern und Kopf-nach-vorn.",
+    "FIVE hintere Kette": "Am FIVE-Gerät. Kontrolliert, ohne Schwung. Becken neutral, Rippen unten – beim Vorlehnen nicht ins Hohlkreuz durchhängen. Ruhig atmen, nicht in den Schmerz ziehen.\n\nWarum: hintere Kette und Hüfte mit viel Kontrolle und wenig Last auf der Wirbelsäule."
   }
 }
