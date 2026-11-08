@@ -72,6 +72,11 @@ hr{border:0;border-top:1px solid var(--line);margin:12px 0}
 
 .setrow{display:grid;grid-template-columns:18px 1fr 1fr 44px;align-items:center;gap:8px;padding:5px 0}
 .setrow.done{opacity:.55}
+.setrow.sides{grid-template-columns:18px 1fr 44px}
+.sidegrid{display:grid;grid-template-columns:16px 1fr 1fr;gap:6px 8px;align-items:center}
+.sidegrid .lr{font-size:12px;font-weight:600;color:var(--tx2)}
+.toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--fill);border-radius:10px;padding:11px 12px;margin-top:6px}
+.toggle input{width:20px;height:20px;accent-color:var(--blue)}
 .tick{width:32px;height:32px;border-radius:50%;border:2px solid var(--tx3);display:flex;align-items:center;justify-content:center;margin-left:auto}
 .tick.on{background:var(--green);border-color:var(--green)}
 .tick svg{width:17px;height:17px;stroke:#fff;stroke-width:3.4;fill:none;display:none}
@@ -385,7 +390,8 @@ function remoteDiff(j){
       const rex = planExercises(rp, lp), target = rex.map(e => e.name);
       const cur = (lp.exercises||[]).map(e => ren.get(e.name) || e.name);
       const changed = rex.filter(re => { const le = (lp.exercises||[]).find(e => (ren.get(e.name)||e.name) === re.name);
-        return le && (le.sets !== re.sets || le.reps !== re.reps); }).map(re => re.name + " → " + re.sets + " × " + re.reps);
+        return le && (le.sets !== re.sets || le.reps !== re.reps || !!le.sides !== !!re.sides || (re.repsL||0) !== (le.repsL||0)); })
+        .map(re => re.name + " → " + re.sets + " × " + (re.sides && re.repsL ? re.repsL + "/" + re.reps : re.reps) + (re.sides ? ", links/rechts getrennt" : ""));
       out.plans.push({ name: lp.name, isNew: false,
         add: target.filter(n => !cur.includes(n)), del: cur.filter(n => !target.includes(n)), changed });
     }
@@ -410,7 +416,10 @@ function applyRemote(j){
         const le = old.find(e => e.name === re.name);
         const unit = re.unit || (le && isWeight(le.unit) ? le.unit : (D.units[re.name] && !isWeight(D.units[re.name]) ? D.units[re.name] : planUnit));
         unhide(re.name);
-        return { id: le ? le.id : uid(), name: re.name, sets: re.sets, reps: re.reps, rest: re.rest, unit };
+        const pe = { id: le ? le.id : uid(), name: re.name, sets: re.sets, reps: re.reps, rest: re.rest, unit };
+        if(re.sides) pe.sides = true;
+        if(re.sides && re.repsL) pe.repsL = re.repsL;
+        return pe;
       });
     }
   }
@@ -553,12 +562,19 @@ function setUnit(name, u){
 }
 function stufe(v){ const r = Math.round(v*10)/10; return "Stufe " + (r === Math.round(r) ? r : de(r.toFixed(1))); }
 const fmtW = (v, u) => u === "stufe" ? stufe(v) : kg(v);
-const fmtSet = (s, u) => u === "sek" ? (s.r||0) + " Sek" : u === "seite" ? (s.r||0) + " / Seite" : fmtW(s.w, u) + " × " + s.r;
+const hasSides = s => s && (s.wl !== undefined || s.rl !== undefined);
+const fmtSet = (s, u) => u === "sek" ? (s.r||0) + " Sek" : u === "seite" ? (s.r||0) + " / Seite"
+  : hasSides(s) ? "L " + fmtW(s.wl||0, u) + " × " + (s.rl||0) + " · R " + fmtW(s.w||0, u) + " × " + (s.r||0)
+  : fmtW(s.w, u) + " × " + s.r;
+/* Seiten eines Satzes als Liste [{w,r}] – bei getrennten Seiten links und rechts */
+const setSides = s => hasSides(s) ? [{ w: s.wl||0, r: s.rl||0 }, { w: s.w||0, r: s.r||0 }] : [{ w: s.w||0, r: s.r||0 }];
 const unitShort = u => ({stufe:"St.", sek:"Sek", seite:"/Seite"})[u] || "kg";
 const unitLong = u => ({stufe:"Stufe", sek:"Sek", seite:"Wdh./Seite"})[u] || "kg";
 const repsLabel = u => u === "sek" ? "Sekunden pro Satz" : u === "seite" ? "Wiederholungen pro Seite" : "Wiederholungen";
 const planLine = e => { const u = peUnit(e);
-  return e.sets + " × " + e.reps + (u === "sek" ? " Sek" : u === "seite" ? " /Seite" : ""); };
+  const lr = e.sides && isWeight(u);
+  return e.sets + " × " + (lr && e.repsL && e.repsL !== e.reps ? e.repsL + "/" + e.reps : e.reps)
+    + (u === "sek" ? " Sek" : u === "seite" ? " /Seite" : "") + (lr ? " · L/R" : ""); };
 function vol(v){
   if(v >= 1000) return de((v/1000).toFixed(1)) + " t";
   return Math.round(v) + " kg";
@@ -581,17 +597,17 @@ const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp
 /* ---------- Auswertung ---------- */
 
 const doneSets = ex => (ex.sets || []).filter(s => s.done);
-const exVolume = ex => exUnit(ex) !== "kg" ? 0 : doneSets(ex).reduce((a,s) => a + (s.w||0) * (s.r||0), 0);
+const exVolume = ex => exUnit(ex) !== "kg" ? 0 : doneSets(ex).reduce((a,s) => a + setSides(s).reduce((b,x) => b + x.w * x.r, 0), 0);
 const wkVolume = w => (w.exercises||[]).reduce((a,e) => a + exVolume(e), 0);
 const wkDone = w => (w.exercises||[]).reduce((a,e) => a + doneSets(e).length, 0);
 const wkPlanned = w => (w.exercises||[]).reduce((a,e) => a + (e.sets||[]).length, 0);
 function e1rm(ex){
   if(exUnit(ex) !== "kg") return 0;
-  const v = doneSets(ex).filter(s => s.w > 0 && s.r > 0).map(s => s.w * (1 + s.r/30));
+  const v = doneSets(ex).flatMap(setSides).filter(s => s.w > 0 && s.r > 0).map(s => s.w * (1 + s.r/30));
   return v.length ? Math.max.apply(null, v) : 0;
 }
 function topLevel(ex){
-  const v = doneSets(ex).filter(s => s.w > 0).map(s => s.w);
+  const v = doneSets(ex).flatMap(setSides).filter(s => s.w > 0).map(s => s.w);
   return v.length ? Math.max.apply(null, v) : 0;
 }
 /* Kennzahl für die Entwicklungskurve: kg-Übungen → 1RM-Schätzung, Stufen-Übungen → höchste Stufe */
@@ -601,10 +617,16 @@ const progress = ex => { const u = exUnit(ex);
 
 /* Sätze vorbelegen mit den Werten vom letzten Training in derselben Einheit
    (Stufen-Studio → letzte Stufen, kg-Studio → letzte kg) */
-function prefillSets(name, n, reps, unit){
+function prefillSets(name, n, reps, unit, sides, repsL){
   const prev = lastLog(name, unit || unitOf(name));
   const ps = prev ? doneSets(prev.ex) : [];
-  return Array.from({length: n}, (_,i) => ({ w: (ps[i] || ps[ps.length-1] || {}).w || 0, r: reps, done: false }));
+  return Array.from({length: n}, (_,i) => {
+    const p = ps[i] || ps[ps.length-1] || {};
+    const set = { w: p.w || 0, r: reps, done: false };
+    /* Links: letzter Linkswert, sonst (früher ohne Seiten erfasst) derselbe Wert wie rechts */
+    if(sides){ set.wl = p.wl !== undefined ? p.wl : (p.w || 0); set.rl = repsL || reps; }
+    return set;
+  });
 }
 
 /* Alle bekannten Übungen: aus Plänen, Verlauf, Beschreibungen und Einheiten */
@@ -956,7 +978,8 @@ function startWorkout(plan){
   if(plan){
     w.exercises = plan.exercises.map(pe => ({
       name: pe.name, unit: peUnit(pe), target: pe.sets, reps: pe.reps, rest: pe.rest,
-      sets: prefillSets(pe.name, pe.sets, pe.reps, peUnit(pe)) }));
+      sides: !!(pe.sides && isWeight(peUnit(pe))), repsL: pe.repsL || undefined,
+      sets: prefillSets(pe.name, pe.sets, pe.reps, peUnit(pe), pe.sides && isWeight(peUnit(pe)), pe.repsL) }));
   }
   D.active = w; save(); render();
 }
@@ -993,7 +1016,7 @@ function exerciseCard(ex, xi){
   return `<div class="card">
     <div class="between">
       <b class="grow trunc" style="font-size:17px;font-weight:600">${esc(ex.name)}</b>
-      <span class="muted small num">${ex.target||ex.sets.length} × ${ex.reps}${u==="sek"?" Sek":""}</span>
+      <span class="muted small num">${ex.target||ex.sets.length} × ${ex.sides && ex.repsL && ex.repsL !== ex.reps ? ex.repsL + "/" + ex.reps : ex.reps}${u==="sek"?" Sek":""}${ex.sides ? " L/R" : ""}</span>
       <button class="unitchip" data-unit="${xi}">${unitLong(u)}</button>
       <button data-info="${esc(ex.name)}" style="color:${det.text||det.images.length ? "var(--blue)":"var(--tx3)"};font-size:20px;padding:0 2px">ⓘ</button>
     </div>
@@ -1007,7 +1030,21 @@ function exerciseCard(ex, xi){
       </div>` : ""}
 
     <div style="margin-top:9px">
-      ${ex.sets.map((s,si) => `
+      ${ex.sets.map((s,si) => ex.sides && isWeight(u) ? `
+        <div class="setrow sides ${s.done?"done":""}">
+          <span class="tiny muted">${si+1}</span>
+          <div class="sidegrid">
+            ${[["L","wl","rl"],["R","w","r"]].map(([lab,kw,kr]) => `
+            <span class="lr">${lab}</span>
+            <div class="fieldwrap"><input class="field" type="text" inputmode="decimal" value="${s[kw]||""}" placeholder="0"
+                 data-sw="${xi}.${si}.${kw}"><span class="unit">${unitShort(u)}</span></div>
+            <div class="fieldwrap wide"><input class="field" type="text" inputmode="numeric" value="${s[kr]||""}" placeholder="0"
+                 data-sr="${xi}.${si}.${kr}"><span class="unit">Wdh</span></div>`).join("")}
+          </div>
+          <button class="tick ${s.done?"on":""}" data-tick="${xi}.${si}">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          </button>
+        </div>` : `
         <div class="setrow ${s.done?"done":""}">
           <span class="tiny muted">${si+1}</span>
           ${u === "sek"
@@ -1362,6 +1399,15 @@ function openExerciseSheet(plan, j){
     <input class="txt" id="es" type="number" inputmode="numeric" value="${e.sets}">
     <label class="lbl" id="erl">${repsLabel(peUnit(e))}</label>
     <input class="txt" id="er" type="number" inputmode="numeric" value="${e.reps}">
+    <div id="sidesbox" style="${isWeight(peUnit(e)) ? "" : "display:none"}">
+      <label class="toggle"><span><b style="font-weight:600">Links/rechts getrennt</b>
+        <div class="tiny muted">Pro Satz je Gewicht und Wdh. für links und rechts. Pause erst nach beiden Seiten.</div></span>
+        <input type="checkbox" id="esd" ${e.sides ? "checked" : ""}></label>
+      <div id="erlbox" style="${e.sides ? "" : "display:none"}">
+        <label class="lbl">Wiederholungen links (leer = wie rechts)</label>
+        <input class="txt" id="erL" type="number" inputmode="numeric" value="${e.repsL || ""}" placeholder="${e.reps}">
+      </div>
+    </div>
     <label class="lbl">Pause in Sekunden</label>
     <input class="txt" id="ep" type="number" inputmode="numeric" step="15" value="${e.rest}">
 
@@ -1377,6 +1423,9 @@ function openExerciseSheet(plan, j){
     b.querySelector("#es").oninput = ev => { e.sets = Math.max(1, +ev.target.value||1); save(); };
     b.querySelector("#er").oninput = ev => { e.reps = Math.max(1, +ev.target.value||1); save(); };
     b.querySelector("#ep").oninput = ev => { e.rest = Math.max(0, +ev.target.value||0); save(); };
+    b.querySelector("#esd").onchange = ev => { e.sides = ev.target.checked; if(!e.sides) delete e.repsL;
+      b.querySelector("#erlbox").style.display = e.sides ? "" : "none"; save(); };
+    b.querySelector("#erL").oninput = ev => { const v = +ev.target.value; if(v > 0) e.repsL = v; else delete e.repsL; save(); };
     b.querySelector("#opendet").onclick = () => openDetailSheet(e.name);
     b.querySelectorAll("[data-u]").forEach(btn => btn.onclick = () => {
       const nu = btn.dataset.u, old = peUnit(e);
@@ -1388,6 +1437,7 @@ function openExerciseSheet(plan, j){
       save();
       b.querySelectorAll("[data-u]").forEach(x => x.classList.toggle("on", x === btn));
       b.querySelector("#erl").textContent = repsLabel(btn.dataset.u);
+      b.querySelector("#sidesbox").style.display = isWeight(nu) ? "" : "none";
     });
     b.querySelector("#delex").onclick = () => {
       if(!confirm("Übung entfernen?")) return;
@@ -1887,6 +1937,14 @@ function bind(){
     D.active.exercises[x].sets[s].r = parseInt(el.value) || 0; save();
   });
 
+  q("[data-sw]", el => el.onchange = () => {
+    const [x,si,k] = el.dataset.sw.split(".");
+    D.active.exercises[+x].sets[+si][k] = parseFloat(el.value.replace(",",".")) || 0; save();
+  });
+  q("[data-sr]", el => el.onchange = () => {
+    const [x,si,k] = el.dataset.sr.split(".");
+    D.active.exercises[+x].sets[+si][k] = parseInt(el.value) || 0; save();
+  });
   q("[data-tick]", b => b.onclick = () => {
     const [x,s] = b.dataset.tick.split(".").map(Number);
     const set = D.active.exercises[x].sets[s];
@@ -1914,7 +1972,9 @@ function bind(){
   q("[data-addset]", b => b.onclick = () => {
     const ex = D.active.exercises[+b.dataset.addset];
     const last = ex.sets[ex.sets.length-1];
-    ex.sets.push({ w: last ? last.w : 0, r: last ? last.r : ex.reps, done: false });
+    const ns = { w: last ? last.w : 0, r: last ? last.r : ex.reps, done: false };
+    if(ex.sides){ ns.wl = last && last.wl !== undefined ? last.wl : ns.w; ns.rl = last && last.rl !== undefined ? last.rl : (ex.repsL || ex.reps); }
+    ex.sets.push(ns);
     save(); render();
   });
 
@@ -1923,8 +1983,10 @@ function bind(){
     const src = tpl && tpl.plan;
     const n = src ? src.sets : 3, reps = src ? src.reps : 10;
     unhide(name);
+    const sd = !!(src && src.sides && isWeight(unitOf(name)));
     D.active.exercises.push({ name, unit: unitOf(name), target: n, reps, rest: src ? src.rest : 60,
-      sets: prefillSets(name, n, reps) });
+      sides: sd, repsL: sd ? src.repsL : undefined,
+      sets: prefillSets(name, n, reps, unitOf(name), sd, sd ? src.repsL : undefined) });
     save(); closeSheet();
   }));
 
@@ -1938,8 +2000,8 @@ function bind(){
     const pe = plan && plan.exercises.find(x => x.name === ex.name);
     if(pe) pe.unit = nu; else setUnit(ex.name, nu);
     /* Offene Sätze mit den letzten Werten in der neuen Einheit vorbelegen */
-    const fresh = prefillSets(ex.name, ex.sets.length, ex.reps, nu);
-    ex.sets.forEach((s,i) => { if(!s.done) s.w = fresh[i].w; });
+    const fresh = prefillSets(ex.name, ex.sets.length, ex.reps, nu, ex.sides, ex.repsL);
+    ex.sets.forEach((s,i) => { if(!s.done){ s.w = fresh[i].w; if(ex.sides) s.wl = fresh[i].wl; } });
     save(); render();
   });
 

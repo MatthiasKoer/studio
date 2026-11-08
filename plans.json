@@ -1,6 +1,6 @@
 {
-  "version": "2026-11-09f",
-  "note": "Schulterdrücken heißt jetzt „Arnold Press“ (beidarmig, Verlauf bleibt). Dazu: Übungen-Reiter, Beschreibungen, FIVE als Haltezeit, S53 hohes Rudern am Latzug, Katze-Kuh, Chin Tucks, Face Pulls in A.",
+  "version": "2026-11-09g",
+  "note": "Neu: links/rechts getrennte Gewichte – Arnold Press und Seitheben pro Seite. Dazu: Arnold Press beidarmig, Übungen-Reiter, Beschreibungen, FIVE als Haltezeit, S53 hohes Rudern, Katze-Kuh, Chin Tucks, Face Pulls in A.",
   "plans": [
     {
       "name": "Einheit A",
@@ -190,7 +190,8 @@
             "Schulterdrücken KH einarmig rechts",
             "Schulterdrücken Kurzhantel",
             "Arnold Press beidarmig"
-          ]
+          ],
+          "sides": true
         },
         {
           "name": "Seitheben Kabelzug beidseits",
@@ -199,7 +200,8 @@
           "rest": 0,
           "aliases": [
             "Seitheben Kabelzug"
-          ]
+          ],
+          "sides": true
         },
         {
           "name": "Face Pull",
@@ -309,7 +311,7 @@
       ]
     },
     "Seitheben Kabelzug beidseits": {
-      "text": "Supersatz mit Face Pull: direkt danach Face Pull, dann Pause. Max. bis Schulterhöhe, Schulter nicht hochziehen.\n\nWarum: Schulterbreite für die Optik, ohne Nackenspannung.",
+      "text": "Abwechselnd links und rechts ohne Pause dazwischen; Gewicht/Stufe pro Seite getrennt erfasst. Supersatz mit Face Pull: direkt danach Face Pull, dann Pause. Max. bis Schulterhöhe, Schulter nicht hochziehen.\n\nWarum: Schulterbreite für die Optik, ohne Nackenspannung.",
       "cat": [
         "optik"
       ]
@@ -821,7 +823,7 @@
       ]
     },
     "Arnold Press": {
-      "text": "Beidarmig, sitzend mit Lehne oder stehend. Start: Kurzhanteln vor den Schultern, Handflächen zu dir. Beim Hochdrücken die Hände nach außen drehen, oben zeigen die Handflächen nach vorn; auf dem Weg zurück wieder eindrehen. Langsam und kontrolliert.\n\nWorauf achten: Schultern tief, nicht zu den Ohren ziehen; unten nicht nach vorn einrollen, Brust offen. Rumpf fest, Rippen unten – kein Hohlkreuz beim Drücken. Oben nicht ganz durchstrecken. Lieber etwas leichter als beim normalen Schulterdrücken.\n\nLinke Seite: Früher lief Schulterdrücken nur rechts, um den SCM links zu schonen. Meldet sich links der Nacken, der Strang am Hals oder das Rauschen, links leichter nehmen oder wieder nur rechts drücken.\n\nWarum: die Drehung trainiert die Schulter über einen größeren Bewegungsweg (vordere und seitliche Schulter).",
+      "text": "Beidarmig, sitzend mit Lehne oder stehend. Start: Kurzhanteln vor den Schultern, Handflächen zu dir. Beim Hochdrücken die Hände nach außen drehen, oben zeigen die Handflächen nach vorn; auf dem Weg zurück wieder eindrehen. Langsam und kontrolliert.\n\nWorauf achten: Schultern tief, nicht zu den Ohren ziehen; unten nicht nach vorn einrollen, Brust offen. Rumpf fest, Rippen unten – kein Hohlkreuz beim Drücken. Oben nicht ganz durchstrecken. Lieber etwas leichter als beim normalen Schulterdrücken.\n\nLinke Seite: In der App getrennt erfasst – links bewusst leichter. Früher lief Schulterdrücken nur rechts, um den SCM links zu schonen. Meldet sich links der Nacken, der Strang am Hals oder das Rauschen, links noch leichter nehmen oder wieder nur rechts drücken.\n\nWarum: die Drehung trainiert die Schulter über einen größeren Bewegungsweg (vordere und seitliche Schulter).",
       "cat": [
         "drücken",
         "optik"
