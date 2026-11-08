@@ -83,12 +83,12 @@ hr{border:0;border-top:1px solid var(--line);margin:12px 0}
 .tabbar button.on{color:var(--blue)}
 .tabbar svg{width:24px;height:24px;stroke:currentColor;stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round}
 
-#restbar{position:fixed;left:0;right:0;bottom:calc(50px + var(--safe-bot));background:color-mix(in srgb,var(--card) 94%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-top:1px solid var(--line);padding:10px 16px;z-index:39;display:none}
+#restbar{position:fixed;left:0;right:0;bottom:calc(50px + var(--safe-bot));background:color-mix(in srgb,var(--card) 94%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-top:1px solid var(--line);padding:10px 16px;z-index:39;display:none;transform:translateZ(0);will-change:transform;contain:layout paint}
 #restbar.show{display:block}
 #restclock{font-size:30px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1;color:var(--blue)}
 #restbar.over #restclock{color:var(--green)}
 .bar{height:4px;background:var(--line);border-radius:2px;margin-top:9px;overflow:hidden}
-.bar i{display:block;height:100%;background:var(--blue);border-radius:2px;transition:width .25s linear}
+.bar i{display:block;height:100%;width:100%;background:var(--blue);border-radius:2px;transform-origin:left center;transform:scaleX(0);transition:transform .25s linear;will-change:transform}
 #restbar.over .bar i{background:var(--green)}
 #restbar.work #restclock{color:var(--amber)}
 #restbar.work .bar i{background:var(--amber)}
@@ -105,7 +105,7 @@ hr{border:0;border-top:1px solid var(--line);margin:12px 0}
 .sheethead button{color:var(--blue);font-size:16px;font-weight:500;flex:none}
 .sheetbody{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 16px calc(40px + var(--safe-bot))}
 
-.thumbs{display:flex;gap:8px;overflow-x:auto;padding:2px 0}
+.thumbs{display:flex;gap:8px;overflow-x:auto;padding:2px 0;min-height:68px}
 .thumbs img{height:64px;width:64px;object-fit:cover;border-radius:9px;flex:none}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:9px}
 .grid img{width:100%;height:96px;object-fit:cover;border-radius:10px}
@@ -144,7 +144,7 @@ label.lbl{display:block;font-size:13px;color:var(--tx2);margin:14px 0 5px}
     <button class="chip" id="restplus">+30</button>
     <button class="chip" id="reststop" style="background:var(--blue);color:#fff">Stopp</button>
   </div>
-  <div class="bar"><i id="restfill" style="width:0%"></i></div>
+  <div class="bar"><i id="restfill"></i></div>
 </div>
 
 <nav class="tabbar" id="tabbar"></nav>
@@ -455,6 +455,7 @@ async function imgGet(id){
   });
 }
 async function imgDel(id){
+  if(typeof thumbCache !== "undefined") thumbCache.delete(id);
   const db = await openDB(); if(!db) return;
   const tx = db.transaction("img","readwrite");
   tx.objectStore("img").delete(id);
@@ -649,7 +650,7 @@ const Rest = {
     opts = opts || {};
     this.mode = opts.mode || "rest"; this.onDone = opts.onDone || null; this.key = opts.key || "";
     document.getElementById("restbar").classList.toggle("work", this.mode === "work");
-    this.total = sec; this.label = label || ""; this.running = true;
+    this.total = sec; this.label = label || ""; this.running = true; this._last = {};
     this.end = Date.now() + sec*1000;
     this.tick = setInterval(() => this.render(), 250);
     this.render();
@@ -662,13 +663,26 @@ const Rest = {
     this.running = false; this.onDone = null; this.key = "";
     clearInterval(this.tick); this.tick = null;
     if(this.wake){ try{ this.wake.release(); }catch(e){} this.wake = null; }
-    if(!quiet){ document.getElementById("restbar").classList.remove("show","over","work"); }
+    if(!quiet){ document.getElementById("restbar").classList.remove("show","over","work"); this._last = {}; }
     if(wasWork && !quiet) render();
   },
-  render(){
+  _last: {},
+  /* Nur schreiben, was sich geändert hat – verhindert unnötiges Neuzeichnen (Zittern auf dem iPhone) */
+  _set(id, prop, val){
+    if(this._last[id + prop] === val) return;
+    this._last[id + prop] = val;
+    const el = document.getElementById(id);
+    if(prop === "text") el.textContent = val;
+    else if(prop === "fill") el.style.transform = "scaleX(" + val + ")";
+    else if(prop === "hide") el.classList.toggle("hidden", val);
+  },
+  _cls(name, on){
     const bar = document.getElementById("restbar");
+    if(bar.classList.contains(name) !== on) bar.classList.toggle(name, on);
+  },
+  render(){
     const left = Math.ceil((this.end - Date.now())/1000);
-    bar.classList.add("show");
+    this._cls("show", true);
     if(left <= 0){
       if(this.running){
         this.running = false;
@@ -678,27 +692,29 @@ const Rest = {
         if(navigator.vibrate) navigator.vibrate([180,90,180]);
         if(this.mode === "work"){
           const fn = this.onDone; this.onDone = null; this.key = "";
-          bar.classList.remove("show","work");
+          this._cls("show", false); this._cls("work", false);
           if(fn) fn();
           return;
         }
-        bar.classList.add("over");
-        document.getElementById("resttitle").textContent = "Pause vorbei";
-        document.getElementById("reststop").textContent = "OK";
-        document.getElementById("restplus").classList.add("hidden");
+        this._cls("over", true);
+        this._set("resttitle", "text", "Pause vorbei");
+        this._set("reststop", "text", "OK");
+        this._set("restplus", "hide", true);
       }
-      document.getElementById("restclock").textContent = "0:00";
-      document.getElementById("restfill").style.width = "100%";
+      this._set("restclock", "text", "0:00");
+      this._set("restfill", "fill", "1");
       return;
     }
-    bar.classList.remove("over");
+    this._cls("over", false);
     const work = this.mode === "work";
-    document.getElementById("resttitle").textContent = work ? "Halten" : "Pause";
-    document.getElementById("reststop").textContent = "Stopp";
-    document.getElementById("restplus").classList.toggle("hidden", work);
-    document.getElementById("restclock").textContent = clock(left);
-    document.getElementById("restlabel").textContent = this.label;
-    document.getElementById("restfill").style.width = Math.min(100, (1 - left/this.total)*100) + "%";
+    this._set("resttitle", "text", work ? "Halten" : "Pause");
+    this._set("reststop", "text", "Stopp");
+    this._set("restplus", "hide", work);
+    this._set("restclock", "text", clock(left));
+    this._set("restlabel", "text", this.label);
+    /* Füllstand in Viertelsekunden-Schritten; die CSS-Transition glättet dazwischen */
+    const ms = Math.max(0, this.end - Date.now());
+    this._set("restfill", "fill", Math.min(1, Math.round((1 - ms/(this.total*1000))*400)/400).toString());
   }
 };
 
@@ -860,7 +876,7 @@ function viewWorkout(){
     </div>
 
     <div class="card row" style="gap:16px">
-      <div><b class="num" style="font-size:19px">${dur(Date.now() - w.start)}</b>
+      <div><b class="num" style="font-size:19px" data-dur>${dur(Date.now() - w.start)}</b>
            <div class="tiny muted">Dauer</div></div>
       <div><b class="num" style="font-size:19px">${wkDone(w)}/${wkPlanned(w)}</b>
            <div class="tiny muted">Sätze</div></div>
@@ -924,17 +940,25 @@ function exerciseCard(ex, xi){
   </div>`;
 }
 
+const thumbCache = new Map();
 async function hydrateThumbs(){
   for(const box of document.querySelectorAll("[data-thumbs]")){
-    const det = detail(box.dataset.thumbs);
-    box.innerHTML = "";
-    for(const id of det.images){
-      const src = await imgGet(id);
-      if(!src) continue;
-      const im = new Image(); im.src = src;
-      im.onclick = () => openDetailSheet(box.dataset.thumbs);
-      box.appendChild(im);
+    const name = box.dataset.thumbs;
+    const ids = detail(name).images;
+    const srcs = [];
+    for(const id of ids){
+      if(!thumbCache.has(id)) thumbCache.set(id, await imgGet(id));
+      const src = thumbCache.get(id);
+      if(src) srcs.push(src);
     }
+    if(!box.isConnected) continue;
+    const frag = document.createDocumentFragment();
+    for(const src of srcs){
+      const im = new Image(); im.src = src; im.decoding = "sync";
+      im.onclick = () => openDetailSheet(name);
+      frag.appendChild(im);
+    }
+    box.replaceChildren(frag);
   }
 }
 
@@ -1767,12 +1791,14 @@ load();
 render();
 checkRemote();
 
+/* Laufende Trainingsdauer: nur die Zahl aktualisieren, nicht die ganze Ansicht neu zeichnen */
 setInterval(() => {
-  if(D.active && tab === "train" && !sheetStack.length && !document.hidden){
-    const el = document.querySelector("[data-finish]");
-    if(el && !document.activeElement.matches("input,textarea,select")) render();
-  }
-}, 30000);
+  if(!D.active || document.hidden) return;
+  const el = document.querySelector("[data-dur]");
+  if(!el) return;
+  const t = dur(Date.now() - D.active.start);
+  if(el.textContent !== t) el.textContent = t;
+}, 15000);
 
 if("serviceWorker" in navigator){
   window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(()=>{}));
